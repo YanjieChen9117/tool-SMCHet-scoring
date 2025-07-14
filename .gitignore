@@ -1,107 +1,64 @@
-# System files
-*.log
-.DS_Store
-
-# R
-.Rhistory
-.Rapp.history
-.Rproj.user
-*.RData
-*.rd[as]
-
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
-.pytest_cache/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
 .Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
-*.py[cod]
-*$py.class
-venv
-.venv
-.env
 
-# VScode
-.vscode
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
 
-# Nextflow
-work/
-.nextflow/
-*.nextflow.log*
+# Translations
+*.mo
+*.pot
 
-## Molecular files
+# Django stuff:
+*.log
 
-# Array file
-*.CEL
-*.cel
-*.OSCHP
+# Sphinx documentation
+docs/_build/
 
-# Sequence file (e.g. Reference genome)
-*.fasta
-*.fa
-*.fai
-*.dict
-*.gtf
+# PyBuilder
+target/
+.Rproj.user
 
+# Plots
+smc_het_eval/scoring_metric_data/metric_behaviour_plots/**
+smc_het_eval/scoring_metric_data/sim_plots/**
 
-# FASTQ file
-*.fq
-*.fastq
-
-# Proteomics file
-*.raw
-*.mzML
-*.mzXML
-*.mgf
-*.idXML
-*.consensusXML
-*.featureXML
-*.mzid
-*.mzData
-*.dta
-*.dta2d
-
-# DNA/RNA alignment file
-*.sam
-*.bam
-*.bai
-*.cram
-*.crai
-
-# Variant file
-*.bcf
-*.csi
-*.vcf
-*.tbi
-*.maf
-*.idx
-
-# Compressed file
-*.gz
-*.tar
-*.zip
-*.bz2
-
-# Image file
-*.jpeg
-*.jpg
-*.png
-*.tif
-*.tiff
-*.gif
-
-# Document file
-*.pdf
-*.rtf
-*.doc
-*.docx
-*.xls
-*.xlsx
-*.ppt
-*.pptx
-
-# Temporary file
-*.tmp
-*.temp
-*.xlk
-*.~vsd*
+# Text files for metric behaviour other than the scenrio rankings 
+# done by different collaborators
+smc_het_eval/scoring_metric_data/text_files/**
+!smc_het_eval/scoring_metric_data/text_files/scenario_rankings.csv
