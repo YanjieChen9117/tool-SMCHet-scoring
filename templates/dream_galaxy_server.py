@@ -5,7 +5,7 @@ import argparse
 import tornado
 import tornado.web
 import requests
-import thread
+import _thread
 import threading
 import time
 import json
@@ -77,7 +77,7 @@ class ValidateHandler(GalaxyProxy):
         workflow = self.remote.get(workflow_path + "/download")
         if not self.submitter.running:
             meta = {}
-            for k,v in self.request.arguments.items():
+            for k,v in list(self.request.arguments.items()):
                 meta[k] = v[0]
             self.submitter.submission = {
                 'workflow' : self.galaxy + workflow_path + "/download",
@@ -104,7 +104,7 @@ class SubmitHandler(GalaxyProxy):
         workflow = self.remote.get(workflow_path + "/download")
         if not self.submitter.running:
             meta = {}
-            for k,v in self.request.arguments.items():
+            for k,v in list(self.request.arguments.items()):
                 meta[k] = v[0]
             submission = {
                 'workflow' : self.galaxy + workflow_path + "/download",
@@ -184,8 +184,8 @@ class Submitter(threading.Thread):
                         if not line:
                             break
                         self.log += line
-                thread.start_new_thread(watch_and_log, (proc.stdout,))
-                thread.start_new_thread(watch_and_log, (proc.stderr,))
+                _thread.start_new_thread(watch_and_log, (proc.stdout,))
+                _thread.start_new_thread(watch_and_log, (proc.stderr,))
                 proc.wait()
                 if proc.returncode == 0:
                     self.log += "\n%s" % (self.submission['ok_message'])
@@ -213,7 +213,7 @@ class RemoteGalaxy(object):
         params['key'] = self.api_key
         logging.debug("POSTING: %s %s" % (c_url, json.dumps(payload)))
         req = requests.post(c_url, data=json.dumps(payload), params=params, headers = {'Content-Type': 'application/json'} )
-        print req.text
+        print(req.text)
         return req.json()
 
     def post_text(self, path, payload, params=None):
@@ -235,7 +235,7 @@ class RemoteGalaxy(object):
 
     def download(self, path, dst):
         r = self.download_handle(path)
-        dsize = 0L
+        dsize = 0
         if hasattr(dst, 'write'):
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:
@@ -320,7 +320,7 @@ class RemoteGalaxy(object):
     def library_paste_file(self, library_id, library_folder_id, name, datapath, uuid=None, metadata=None):
         datapath = os.path.abspath(datapath)
         found = False
-        for ppath, dpath in self.path_mapping.items():
+        for ppath, dpath in list(self.path_mapping.items()):
             if datapath.startswith(ppath):
                 datapath = os.path.join(dpath, os.path.relpath(datapath, ppath))
                 found = True
@@ -342,7 +342,7 @@ class RemoteGalaxy(object):
         data['filesystem_paths'] = datapath
         logging.info("Pasting %s: %s" % (name, datapath))
         libset = self.post("/api/libraries/%s/contents" % library_id, data)
-        print libset
+        print(libset)
         return libset[0]
 
 

@@ -31,16 +31,16 @@ ADMIN_USER_IDS = [1421212, 297328, 3323319]
 ## Configuring them here as a list will save a round-trip to the server
 ## every time the script starts.
 evaluation_queues = [
-{u'contentSource': u'syn2813581',
-  u'createdOn': u'2015-06-16T18:40:16.436Z',
-  u'description': u'Queue for workflow submission for the SMC-Het Challenge',
-  u'etag': u'161b8f99-1dbc-4e6f-a8f4-76400b2413cf',
-  u'id': u'4487063',
-  u'name': u'SMC-Het-Challenge-evaluation-queue',
-  u'ownerId': u'1421212',
-  u'status': u'OPEN',
-  u'submissionInstructionsMessage': u'See: https://www.synapse.org/#!Synapse:syn2813581/wiki/',
-  u'submissionReceiptMessage': u'Thanks for submitting your workflow'}]
+{'contentSource': 'syn2813581',
+  'createdOn': '2015-06-16T18:40:16.436Z',
+  'description': 'Queue for workflow submission for the SMC-Het Challenge',
+  'etag': '161b8f99-1dbc-4e6f-a8f4-76400b2413cf',
+  'id': '4487063',
+  'name': 'SMC-Het-Challenge-evaluation-queue',
+  'ownerId': '1421212',
+  'status': 'OPEN',
+  'submissionInstructionsMessage': 'See: https://www.synapse.org/#!Synapse:syn2813581/wiki/',
+  'submissionReceiptMessage': 'Thanks for submitting your workflow'}]
 evaluation_queue_by_id = {q['id']:q for q in evaluation_queues}
 
 ## define the default set of columns that will make up the leaderboard

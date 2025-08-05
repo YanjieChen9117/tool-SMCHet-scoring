@@ -81,7 +81,7 @@ def linear_5clust_uneven(prop=[0.2,0.1, 0.2, 0.2,0.1],nssm=4000):
 
 
 def permute_tree(tree, tree_dict):
-	print tree.tree_struct()
+	print(tree.tree_struct())
 	#starting at the bottom most node switch parents to other nodes with a lower number
 	#baseline tree
 	tree_array = tree.tree_struct()
@@ -112,21 +112,21 @@ def permute_tree(tree, tree_dict):
 					permute_tree(tree,tree_dict)
 
 def output_trees(tree_dict=None, print_trees=False, prefix=None, sizes = None):
-	clusters = np.arange(len(tree_dict.values()[0]))+1
-	print "clusters", clusters
+	clusters = np.arange(len(list(tree_dict.values())[0]))+1
+	print("clusters", clusters)
 	i = 0
 	if(prefix is None and print_trees == True):
 		prefix = 'tree_'+ str(len(clusters)) + "clust"
 			
-	for parents in tree_dict.values():
+	for parents in list(tree_dict.values()):
 		tree_df = np.vstack((clusters,parents))
 		tree_df = np.transpose(tree_df)
 		tree = tree_from_df(tree_df, sizes=sizes)
 		tree_mistakes(tree, prefix + "_"+str(i)+"_")	
 		if (print_trees == True):
 			outfile = prefix + "_" + str(i) + ".txt"
-			print outfile
-			print i
+			print(outfile)
+			print(i)
 			tree.out_1C(prefix + "_" + str(i) + "_1C.txt")
 			np.savetxt(outfile,tree_df, fmt='%1i' ,delimiter="\t")
 		i += 1
@@ -134,9 +134,9 @@ def output_trees(tree_dict=None, print_trees=False, prefix=None, sizes = None):
 	return (tree_df)
 
 def new_tree_mistakes(tree_dict, i,sizes=None):
-	clusters = np.arange(len(tree_dict.values()[0]))+1
+	clusters = np.arange(len(list(tree_dict.values())[0]))+1
 	# for parents in tree_dict.values()[0]:
-	parents = tree_dict.values()[i]
+	parents = list(tree_dict.values())[i]
 	
 	print(sizes)
 	tree_df = np.vstack((clusters,parents))

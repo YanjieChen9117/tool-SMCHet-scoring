@@ -3,7 +3,7 @@ import numpy as np
 import itertools
 import json
 import argparse
-import StringIO
+import io
 import sys
 import metric_behavior as mb
 from functools import reduce
@@ -16,7 +16,10 @@ import pdb
 
 # blo
 import time
-import resource
+if sys.platform != "win32":
+    import resource
+else:
+    resource = None
 import os
 import gzip
 
@@ -24,7 +27,6 @@ global err_msgs
 err_msgs = []
 
 #from metric.py import*
- 
 INFO            = True  #set to true to print out various debugging output with printInfo
 TIME            = False
 MEM             = False
@@ -35,7 +37,7 @@ WRITE_3A_FILES  = False
 class ValidationError(Exception):
     def __init__(self, value):
         self.value = value
-        print('VALIDATION ERROR: %s' % value)
+        print(('VALIDATION ERROR: %s' % value))
     def __str__(self):
         return repr(self.value)
 
@@ -54,7 +56,7 @@ def is_gzip(path):
 
 def validate1A(data, mask=None):
     data = data.split('\n')
-    data = filter(None, data)
+    data = [_f for _f in data if _f]
     if len(data) < 1:
         raise ValidationError("Input file contains zero lines")
     if len(data) > 1:
@@ -85,7 +87,7 @@ def calculate1A(pred, truth, err='abs'):
 
 def validate1B(data, mask=None):
     data = data.split('\n')
-    data = filter(None, data)
+    data = [_f for _f in data if _f]
     if len(data) != 1:
         if len(data) == 0:
             raise ValidationError("Input file contains zero lines")
@@ -112,7 +114,7 @@ def calculate1B(pred, truth, method='normalized'):
 
 def validate1C_lax(data):
     data = data.split('\n')
-    data = filter(None, data)
+    data = [_f for _f in data if _f]
     data = [x.strip() for x in data]
     if len(data) < 1:
         raise ValidationError("Number of lines is less than 1")
@@ -120,11 +122,15 @@ def validate1C_lax(data):
         raise ValidationError("Number of lines is greater than 10")
 
     data2 = [x.split('\t') for x in data]
-    return zip([int(x[1]) for x in data2], [float(x[2]) for x in data2])
+    return list(zip([int(x[1]) for x in data2], [float(x[2]) for x in data2]))
 
 def validate1C(data, nssms, mask=None):
+    print("Current function: validate1C")
+    print("nssms: ", nssms)
+    print("mask: ", len(mask) if mask else "None")
+
     data = data.split('\n')
-    data = filter(None, data)
+    data = [_f for _f in data if _f]
     data = [x.strip() for x in data]
     if len(data) < 1:
         raise ValidationError("Number of lines is less than 1")
@@ -166,7 +172,7 @@ def validate1C(data, nssms, mask=None):
     reported_nssms = sum([int(x[1]) for x in data2])
     if reported_nssms != nssms:
         raise ValidationError("Total number of reported mutations is %d. Should be %d" % (reported_nssms, nssms))
-    return zip([int(x[1]) for x in data2], [float(x[2]) for x in data2])
+    return list(zip([int(x[1]) for x in data2], [float(x[2]) for x in data2]))
 
 def calculate_original1C(pred, truth, err='abs'):
     pred.sort(key = lambda x: x[1])
@@ -227,19 +233,19 @@ def clonalFraction(pred, truth):
     pred_cf = float(pred[np.argmax(pred[:,1]),0])/float(np.sum(pred[:,0]))
     truth_cf = float(truth[np.argmax(truth[:,1]),0])/float(np.sum(truth[:,0]))
 
-    print pred_cf, truth_cf
+    print(pred_cf, truth_cf)
     cf_score = max(0,1-(abs(pred_cf-truth_cf)/truth_cf))
     return cf_score
 
 def clonalFraction3(pred,truth):
-    print "Calculating clonal fraction"
+    print("Calculating clonal fraction")
     pred_cf = float(sum(np.all(pred == 0,0)))/float(pred.shape[0])
     truth_cf = float(sum(np.all(truth == 0,0)))/float(truth.shape[0])
-    print pred_cf, truth_cf
-    print sum(np.all(pred == 0,0)), pred.shape[0]
-    print sum(np.all(truth == 0,0)), truth.shape[0]
+    print(pred_cf, truth_cf)
+    print(sum(np.all(pred == 0,0)), pred.shape[0])
+    print(sum(np.all(truth == 0,0)), truth.shape[0])
     cf_score = max(0,1-(abs(pred_cf-truth_cf)/truth_cf))
-    print cf_score
+    print(cf_score)
     return cf_score
 
 def clonalFractionSim(pred, truth):
@@ -257,7 +263,7 @@ def validate2A(data, nssms, return_ccm=True, mask=None):
     #   - if an entry in file can't be cast to int
     #   - if set(file) != seq(1, len(set(file)), 1)
     data = data.split('\n')
-    data = filter(None, data)
+    data = [_f for _f in data if _f]
 
     # apply mask if it exists
     data = [x for i, x in enumerate(data) if i in mask] if mask else data
@@ -266,7 +272,7 @@ def validate2A(data, nssms, return_ccm=True, mask=None):
         raise ValidationError("Input file contains a different number of lines than the specification file. Input: %s lines Specification: %s lines" % (len(data), nssms))
     cluster_entries = set()
     # make a set of all entries in truth file
-    for i in xrange(len(data)):
+    for i in range(len(data)):
         try:
             data[i] = int(data[i])
             cluster_entries.add(data[i])
@@ -274,7 +280,7 @@ def validate2A(data, nssms, return_ccm=True, mask=None):
             raise ValidationError("Cluster ID in line %d (ssm %s) can not be cast as an integer" % (i + 1, data[i][0]))
     used_clusters = sorted(list(cluster_entries))
     # expect the set to be equal to seq(1, len(set), 1)
-    expected_clusters = range(1, len(cluster_entries) + 1)
+    expected_clusters = list(range(1, len(cluster_entries) + 1))
 
     # only raise ValidationError if the clusters are not equal AND no mask is used
     if used_clusters != expected_clusters and not mask:
@@ -291,7 +297,7 @@ def validate2A(data, nssms, return_ccm=True, mask=None):
     c_m = np.zeros((len(data), len(cluster_entries)), dtype=np.int8)
 
     # for each value in file, put a 1 in the m index of the n row
-    for i in xrange(len(data)):
+    for i in range(len(data)):
         c_m[i, data[i] - 1] = 1
 
     if not return_ccm:
@@ -299,7 +305,6 @@ def validate2A(data, nssms, return_ccm=True, mask=None):
     else:
         ccm = np.dot(c_m, c_m.T)
         return ccm
-
 
 def validate2Afor3A(data, nssms, mask=None):
     # mask works for free!
@@ -330,7 +335,7 @@ def validate2B(filename, nssms, mask=None):
             #print "done load " + filename #debug
         else:
             # TODO - optimize with line by line
-            data = StringIO.StringIO(filename)
+            data = io.StringIO(filename)
             truth_ccm = np.loadtxt(data, ndmin=2)
             ccm[:nssms, :nssms] = truth_ccm
     except ValueError as e:
@@ -362,7 +367,7 @@ def isSymmetric(x):
     symmetricity = False
     if (x.shape[0] == x.shape[1]):
         symmetricity = True
-        for i in xrange(x.shape[0]):
+        for i in range(x.shape[0]):
             symmetricity = symmetricity and np.allclose(x[i, :], x[:, i])
             if (not symmetricity):
                 break
@@ -414,7 +419,7 @@ def calculate2(pred, truth, full_matrix=True, method='default', pseudo_counts=No
             else:
                 scores.append(func_dict[m](pred, truth, full_matrix=full_matrix, rnd=rnd))
             # normalize the scores to be between (worst of OneCluster and NCluster scores) and (Truth score)
-            print "raw ", m, ": ", scores[i]
+            print("raw ", m, ": ", scores[i])
             i=i+1
         i=0
         for m in functions:
@@ -425,7 +430,7 @@ def calculate2(pred, truth, full_matrix=True, method='default', pseudo_counts=No
                 scores[i] = set_to_zero(1 - (scores[i] / worst_scores[i]))
             else:
                 scores[i] = set_to_zero((scores[i] - worst_scores[i]) / (1 - worst_scores[i]))
-            print "normalized ", m, ": ", scores[i]
+            print("normalized ", m, ": ", scores[i])
             i=i+1
         return [scores, np.mean(scores)]
 
@@ -466,7 +471,7 @@ def calculate2_quaid(pred, truth):
         try:
             return 2.0/(1.0/ones_score + 1.0/zeros_score)
         except Warning:
-            print ones_score, zeros_score
+            print(ones_score, zeros_score)
             return 0
 
 def calculate2_orig(pred, truth, full_matrix=True):
@@ -526,7 +531,7 @@ def calculate2_simpleKL(pred, truth, rnd=1e-50):
     return abs(res)
 
 def calculate2_js_divergence(pred, truth, rnd=1e-50, full_matrix=True, sym=True):
- #   print "Calculating JS divergence"
+
     if full_matrix:
         pred_cp = pred
         truth_cp = truth
@@ -542,7 +547,7 @@ def calculate2_js_divergence(pred, truth, rnd=1e-50, full_matrix=True, sym=True)
     res = 0 # result to be returned
 
     # do one row at a time to reduce memory usage
-    for x in xrange(size):
+    for x in range(size):
         # (1 - rnd) will cast the pred_cp/truth_cp matrices automatically if they are int8
         pred_row = (1 - rnd) * pred_cp[x, ] + rnd
         truth_row = (1 - rnd) * truth_cp[x, ] + rnd
@@ -614,7 +619,7 @@ def calculate2_pseudoV(pred, truth, rnd=1e-50, full_matrix=True, sym=False):
     res = 0 # result to be returned
 
     # do one row at a time to reduce memory usage
-    for x in xrange(size):
+    for x in range(size):
         # (1 - rnd) will cast the pred_cp/truth_cp matrices automatically if they are int8
         pred_row = (1 - rnd) * pred_cp[x, ] + rnd
         truth_row = (1 - rnd) * truth_cp[x, ] + rnd
@@ -709,7 +714,7 @@ def myscale(vec1, vec2, m1, m2, s1, s2):
     #         out += ((vec1[i, j] - m1)/s1) * ((vec2[i, j] - m2)/s2)
 
     # optimized - row operations
-    for i in xrange(N):
+    for i in range(N):
         out += np.dot(((vec1[i, ] - m1)/s1), ((vec2[i, ] - m2)/s2))
 
     return out
@@ -729,7 +734,7 @@ def mystd(vec1, vec2, m1, m2):
     # s2 = np.sqrt(s2)
 
     # optimized - row operations
-    for i in xrange(N):
+    for i in range(N):
         s1 += np.ndarray.sum((vec1[i, ] - m1)**2)
         s2 += np.ndarray.sum((vec2[i, ] - m2)**2)
     s1 /= (M - 1)
@@ -744,7 +749,7 @@ def mystd(vec1, vec2, m1, m2):
     return s1, s2
 
 def calculate2_aupr(pred, truth, full_matrix=True, rnd=1e-50):
- #   print "Calculating AUPR"
+    
     n = truth.shape[0]
     if full_matrix:
         pred_cp = pred.flatten()
@@ -763,12 +768,7 @@ def calculate2_aupr(pred, truth, full_matrix=True, rnd=1e-50):
     aucpr = mt.auc(recall, precision)
     return aucpr
 
-# Matthews Correlation Coefficient
-# don't just use upper triangular matrix because you get na's with the AD matrix
-# note about casting: should be int/float friendly for pred/truth matrices
-
 def calculate2_mcc(pred, truth, full_matrix=True, rnd=1e-50):
-#    print "Calculating MCC"
     n = truth.shape[0]
     ptype = str(pred.dtype)
     ttype = str(truth.dtype)
@@ -785,21 +785,7 @@ def calculate2_mcc(pred, truth, full_matrix=True, rnd=1e-50):
     fp = 0.0
     fn = 0.0
 
-    # original
-    # for i in xrange(pred_cp.shape[0]):
-    #     for j in xrange(pred_cp.shape[1]):
-    #         if truth_cp[i,j] and pred_cp[i,j] >= 0.5:
-    #             tp = tp +1.0
-    #         elif truth_cp[i,j] and pred_cp[i,j] < 0.5:
-    #             fn = fn + 1.0
-    #         if (not truth_cp[i,j]) and pred_cp[i,j] >= 0.5:
-    #             fp = fp +1.0
-    #         elif (not truth_cp[i,j]) and pred_cp[i,j] < 0.5:
-    #             tn = tn + 1.0
-
-    # optimized with fancy boolean magic algorithm to calculate MCC
-   # pdb.set_trace()
-    for i in xrange(pred_cp.shape[0]):
+    for i in range(pred_cp.shape[0]):
         # only round if the matrices are floats
         pred_line = np.round(pred_cp[i, ] + 10.0**(-10)) if 'float' in ptype else pred_cp[i, ]
         truth_line = np.round(truth_cp[i, ] + 10.0**(-10)) if 'float' in ttype else truth_cp[i, ]
@@ -835,8 +821,6 @@ def calculate2_mcc(pred, truth, full_matrix=True, rnd=1e-50):
         num = (tp*tn - fp*fn)
 
     return num / float(denom)
-
-
 #### SUBCHALLENGE 3 #########################################################################################
 
 def validate3A(data, cas, nssms, mask=None):
@@ -847,7 +831,7 @@ def validate3A(data, cas, nssms, mask=None):
     cluster_assignments = np.argmax(cas, 1) + 1
 
     data = data.split('\n')
-    data = filter(None, data)
+    data = [_f for _f in data if _f]
     if len(data) != predK:
         raise ValidationError("Input file 3A contains a different number of lines (%d) than expected (%d)" % (len(data),predK))
     data = [x.split('\t') for x in data]
@@ -861,7 +845,7 @@ def validate3A(data, cas, nssms, mask=None):
             raise ValidationError("Entry in line %d could not be cast as integer" % (i+1))
 
 
-    if [x[0] for x in data] != range(1, predK+1):
+    if [x[0] for x in data] != list(range(1, predK+1)):
         raise ValidationError("First column must have %d entries in ascending order starting with 1" % predK)
 
     for i in range(len(data)):
@@ -878,7 +862,7 @@ def validate3A(data, cas, nssms, mask=None):
         descendant_of[parent] += [child] + descendant_of[child]
         parents.add(parent)
         # gps (grandparents) are the list of nodes that are ancestors of the immediate parent
-        gps = [x for x in descendant_of.keys() if parent in descendant_of[x]]
+        gps = [x for x in list(descendant_of.keys()) if parent in descendant_of[x]]
         for gp in gps:
             descendant_of[gp] += [child] + descendant_of[child]
 
@@ -928,7 +912,7 @@ def validate3B(filename, ccm, nssms, mask=None):
         else:
             #ad = filename
             # TODO - optimize with line by line 
-            data = StringIO.StringIO(filename)
+            data = io.StringIO(filename)
             ad = np.zeros((nssms, nssms))
             cm = np.loadtxt(data, ndmin=2)
             ad[:nssms, :nssms] = cm
@@ -965,8 +949,8 @@ def checkForBadTriuIndices(*matrices):
         if (not equalShapes):
             break
     if (equalShapes):
-        for i in xrange(shape[0]):
-            for j in xrange(i + offset, shape[0]):
+        for i in range(shape[0]):
+            for j in range(i + offset, shape[0]):
                 val = reduce(lambda x, y: x + y, [z[i, j] for z in matrices])
                 fail &= (val <= 1 or np.isclose(val, 1, 1e-3))
                 if (not fail):
@@ -979,7 +963,7 @@ def make_all(ccm,ad, print_cous=False):
     assert np.allclose(ccm.diagonal(), np.ones((ccm.shape[0])))
     c = makeCMatrix(ccm,ad,ad.T)
     # if (print_cous == True):
-#        print np.round(c,2)
+
     if(np.min(c)<0):
         np.savetxt('broken_ccm.txt', ccm, fmt='%d')
         np.savetxt('broken_ad.txt', ad, fmt='%d')
@@ -1046,7 +1030,7 @@ def makeCMatrix(*matrices):
     if (equalShapes):
 
         output = np.ones([shape[0], shape[0]])
-        for i in xrange(shape[0]):
+        for i in range(shape[0]):
             output[i, ] -= reduce(lambda x, y: x + y, [z[i, ] for z in matrices]
                 )
     else:
@@ -1225,8 +1209,8 @@ def calculate3_onemetric(pred_ccm, pred_ad, truth_ccm, truth_ad, rnd=1e-50, meth
         res = res / float(n)
 
     if verbose:
-        print("%s for Matrices\nCC: %s, AD: %s, AD Transpose: %s, Cousin: %s\nResult: %s" %
-              (method, str(ccm_res), str(ad_res), str(ad_res_t), str(cous_res), str(res)))
+        print(("%s for Matrices\nCC: %s, AD: %s, AD Transpose: %s, Cousin: %s\nResult: %s" %
+              (method, str(ccm_res), str(ad_res), str(ad_res_t), str(cous_res), str(res))))
     return res
 
 
@@ -1288,7 +1272,7 @@ def filterFPs(x, mask):
         x.resize((old_n**2), refcheck=False)
 
         # 3 shift elements
-        for k in xrange(new_n):
+        for k in range(new_n):
             x[(k*new_n):((k+1)*new_n)] = x[(k*old_n):(k*old_n+new_n)]
 
         # 4 shrink array
@@ -1336,7 +1320,7 @@ def add_pseudo_counts(ccm, ad=None, num=None):
     ccm.resize((new_n**2), refcheck=False)
 
     # 2 shift elements
-    for i in reversed(xrange(new_n)):
+    for i in reversed(range(new_n)):
         if i < old_n:
             ccm[(i*new_n):(i*new_n + old_n)] = ccm[(i*old_n):(i*old_n + old_n)]
             ccm[(i*new_n + old_n):((i+1)*new_n)] = 0
@@ -1517,7 +1501,7 @@ def makeMasks(vcfFile, sample_fraction):
 
     truth_mask = []
     truth_index = 0
-    for i in xrange(len(vcf)):
+    for i in range(len(vcf)):
         if vcf[i] and i in sample_mask:
             truth_mask.append(truth_index)
         if vcf[i]:
@@ -1607,7 +1591,6 @@ def verifyChallenge(challenge, predfiles, vcf):
             return "Invalid"
     return "Valid"
 
- 
 def scoreChallenge(challenge, predfiles, truthfiles, vcf,  method='pearson', sample_fraction=1.0, rnd=1e-50):
     
     #global err_msgs
@@ -1779,23 +1762,27 @@ def printInfo(*string):
 
 def mem(note):
     pid = os.getpid()
-    with open(os.path.join('/proc', str(pid), 'status')) as f:
-        lines = f.readlines()
-    _vt = [l for l in lines if l.startswith("VmSize")][0]
-    vt = mem_pretty(int(_vt.split()[1]))
-    _vmax = [l for l in lines if l.startswith("VmPeak")][0]
-    vmax = mem_pretty(int(_vmax.split()[1]))
-    _vram = [l for l in lines if l.startswith("VmRSS")][0]
-    vram = mem_pretty(int(_vram.split()[1]))
-    _vswap = [l for l in lines if l.startswith("VmSwap")][0]
-    vswap = mem_pretty(int(_vswap.split()[1]))
+    if sys.platform != "win32":
+        with open(os.path.join('/proc', str(pid), 'status')) as f:
+            lines = f.readlines()
+        _vt = [l for l in lines if l.startswith("VmSize")][0]
+        vt = mem_pretty(int(_vt.split()[1]))
+        _vmax = [l for l in lines if l.startswith("VmPeak")][0]
+        vmax = mem_pretty(int(_vmax.split()[1]))
+        _vram = [l for l in lines if l.startswith("VmRSS")][0]
+        vram = mem_pretty(int(_vram.split()[1]))
+        _vswap = [l for l in lines if l.startswith("VmSwap")][0]
+        vswap = mem_pretty(int(_vswap.split()[1]))
 
-    vrammax = mem_pretty(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+        vrammax = mem_pretty(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
-    if (MEM and (FINAL_MEM and note == 'DONE' or not FINAL_MEM)):
-        print('[ M E M ]   total: %s (max: %s) @ %s' % (vt, vmax, note))
-        # print('[ M E M ] total: %s (max: %s) | ram: %s (max: %s) | swap: %s @ %s' % (vt, vmax, vram, vrammax, vswap, note))
-        sys.stdout.flush()
+        if (MEM and (FINAL_MEM and note == 'DONE' or not FINAL_MEM)):
+            print(('[ M E M ]   total: %s (max: %s) @ %s' % (vt, vmax, note)))
+            # print('[ M E M ] total: %s (max: %s) | ram: %s (max: %s) | swap: %s @ %s' % (vt, vmax, vram, vrammax, vswap, note))
+            sys.stdout.flush()
+    else:
+        # Process status not available on Windows
+        pass
 
 def mem_pretty(mem):
     denom = 1
@@ -1811,9 +1798,6 @@ def mem_pretty(mem):
 
 if __name__ == '__main__':
     start_time = time.time()
-    #global err_msgs
-    #err_msgs = []
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--pred-config", default=None)
     parser.add_argument("--truth-config", default=None)
@@ -1828,7 +1812,6 @@ if __name__ == '__main__':
     parser.add_argument('--approx_seed', nargs=1, type=int, default=[75])
     parser.add_argument('--rnd', nargs=1, type=float, default=[1e-50])
     args = parser.parse_args()
-
     if args.pred_config is not None and args.truth_config is not None:
         with open(args.pred_config) as handle:
             pred_config = {}
@@ -1849,8 +1832,8 @@ if __name__ == '__main__':
                 except ValueError as e:
                     pass
         out = {}
-        print "pred", pred_config
-        print "truth", truth_config
+        print("pred", pred_config)
+        print("truth", truth_config)
         for challenge in pred_config:
             if challenge in truth_config:
                 predfile = pred_config[challenge]
@@ -1878,13 +1861,13 @@ if __name__ == '__main__':
                 print('Sample Fraction value must be 0.0 < x < 1.0')
                 sys.exit(1)
             results = []
-            for i in xrange(iterations):
-                print('Running Iteration %d with Sampling Fraction %.2f' % (i + 1, sample_fraction))
+            for i in range(iterations):
+                print(('Running Iteration %d with Sampling Fraction %.2f' % (i + 1, sample_fraction)))
                 resample = True
                 while (resample):
                     try:
                         res = scoreChallenge(args.challenge, args.predfiles, args.truthfiles, args.vcf, sample_fraction, rnd=args.rnd[0])
-                        print('Score[%d] -> %.5f' % (i + 1, res))
+                        print(('Score[%d] -> %.5f' % (i + 1, res)))
                         results.append(res)
                         resample = False
                     except SampleError as e:
@@ -1898,20 +1881,20 @@ if __name__ == '__main__':
             print('###################')
             print('## R E S U L T S ##')
             print('###################')
-            print('Sampling Fraction\t%.2f' % sample_fraction)
-            print('Sample Iterations\t%d' % iterations)
-            print('Sampling Seed\t\t%d' % args.approx_seed[0])
-            print('Scores\t\t\t%s' % str(results))
-            print('Mean\t\t\t%.5f' % mean)
-            print('Median\t\t\t%.5f' % median)
-            print('Standard Deviation\t%.5f' % std)
+            print(('Sampling Fraction\t%.2f' % sample_fraction))
+            print(('Sample Iterations\t%d' % iterations))
+            print(('Sampling Seed\t\t%d' % args.approx_seed[0]))
+            print(('Scores\t\t\t%s' % str(results)))
+            print(('Mean\t\t\t%.5f' % mean))
+            print(('Median\t\t\t%.5f' % median))
+            print(('Standard Deviation\t%.5f' % std))
             print('')
             res = adj_final(mean)
         # REAL SCORE
         else:
-            print('Running Challenge %s' % args.challenge)
+            print(('Running Challenge %s' % args.challenge))
             res = scoreChallenge(args.challenge, args.predfiles, args.truthfiles, args.vcf,  rnd=args.rnd[0],method=args.method)
-            print res
+            print(res)
             #print('SCORE -> %.16f' % res)
 
         with open(args.outputfile, "w") as handle:
@@ -1923,9 +1906,9 @@ if __name__ == '__main__':
 
     end_time = time.time() - start_time
     if TIME:
-        print("[ T I M E ] %s seconds!" % round(end_time, 2))
+        print(("[ T I M E ] %s seconds!" % round(end_time, 2)))
 
     if len(err_msgs) > 0:
         for msg in err_msgs:
-            print msg
+            print(msg)
         raise ValidationError("Errors encountered. If running in Galaxy see stdout for more info. The results of any successful evaluations are in the Job data.")

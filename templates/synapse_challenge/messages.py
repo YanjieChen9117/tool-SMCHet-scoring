@@ -171,21 +171,21 @@ def error_notification(userIds, **kwargs):
                             kwargs=kwargs)
 
 def send_message(userIds, subject_template, message_template, kwargs):
-    print kwargs
+    print(kwargs)
     subject = formatter.format(subject_template, **kwargs)
     message = formatter.format(message_template, **kwargs)
     if dry_run:
-        print "\nDry Run: would have sent:"
-        print subject
-        print "-" * 60
-        print message
+        print("\nDry Run: would have sent:")
+        print(subject)
+        print("-" * 60)
+        print(message)
         return None
     elif syn:
         response = syn.sendMessage(
             userIds=userIds,
             messageSubject=subject,
             messageBody=message)
-        print "sent: ", unicode(response).encode('utf-8')
+        print("sent: ", str(response).encode('utf-8'))
         return response
     else:
         sys.stderr.write("Can't send message. No Synapse object configured\n")

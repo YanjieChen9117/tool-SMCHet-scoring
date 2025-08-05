@@ -104,11 +104,11 @@ def construct_loc_node_map(yml_ob,vcf_prefix):
 	chrs = [str(x) for x in range(1,23)] + ['X','Y']
 	mut_types = ['snv','sv','indel']
 	def decend(node, par_muts, par_prefix, ind):
-		if not node.has_key('children') and (node['mut_type'] or par_muts):
+		if 'children' not in node and (node['mut_type'] or par_muts):
 			muts = [get_ids(vcf_prefix+'chr%s%s_c%d_%s.vcf' % (c,par_prefix,ind,s)) for c,s in  itertools.product(chrs,mut_types)]
 			muts = itertools.chain(*muts)
 			return [{'prefix':'%s_c%d' % (par_prefix,ind),'parent': par_prefix, 'mutations':set(muts)}]
-		elif node.has_key('children'):
+		elif 'children' in node:
 			ret = []
 			lin_muts = None
 			for i,ch in enumerate(node['children']):
@@ -119,7 +119,7 @@ def construct_loc_node_map(yml_ob,vcf_prefix):
 				else:
 					pref = par_prefix + '_c%d' % ind
 				muts = decend(ch,node['mut_type'],pref, i)
-				if not ch['mut_type'] and not ch.has_key('children'):
+				if not ch['mut_type'] and 'children' not in ch:
 					lin_muts = muts[0]
 					lin_muts['prefix'] = lin_muts['parent']
 					lin_muts['parent'] = '_'.join(lin_muts['parent'].split('_')[:-1])
@@ -141,7 +141,7 @@ def construct_loc_node_map(yml_ob,vcf_prefix):
 
 def get_phis(yml_ob):
 	def decend(node,par_perc):
-		if not node.has_key('children'):
+		if 'children' not in node:
 			return [node['percent'] * par_perc]
 		else:
 			ret = [node['percent'] * par_perc]

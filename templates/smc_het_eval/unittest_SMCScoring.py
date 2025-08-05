@@ -7,13 +7,13 @@ import json
 import sys
 
 def test_metrics():
-    print "Testing metrics"
+    print("Testing metrics")
     entry1 = np.matrix([[2, 1, 0], [0, 0, 2]])
     a = [True, False]
     b = ["Full", "Half"]
     ans1 = calculate_overlap_matrix(entry1)
     assert ans1 == (9, 0, 12, 4)
-    print "     1. Information derived from overlap matrix is correct"
+    print("     1. Information derived from overlap matrix is correct")
 
     orig1 = {"Full" : 0.80, "Half" : 0.80}
     sqrt1 = {"Full" : 0.89 , "Half" : 0.89}
@@ -31,11 +31,11 @@ def test_metrics():
         assert round(om_calculate2_aupr(*ans1, full_matrix=p), 2) == aupr1[q]
     
     assert round(om_calculate2_pseudoV(entry1), 2) == pseudoV1["Full"]
-    print "     2. Metrics working correctly"
-    print "Finished testing metrics"
+    print("     2. Metrics working correctly")
+    print("Finished testing metrics")
 
 def test_scaling():
-    print "Testing scaling function"
+    print("Testing scaling function")
     
     scenario = ["OneCluster", "NCluster"]
     larger_is_worse = [True, False]
@@ -54,15 +54,15 @@ def test_scaling():
         assert round(get_bad_score_om(entry1, om_calculate2_mcc, scenario=p), 2) == mcc1[p]
         assert round(get_bad_score_om(entry1, om_calculate2_spearman, scenario=p), 2) == spearman1[p]
         assert round(get_bad_score_om(entry1, om_calculate2_aupr, scenario=p), 2) == aupr1[p]
-    print "     1. Score outputed by each scenario for each function are correct"
+    print("     1. Score outputed by each scenario for each function are correct")
 
     assert round(get_worst_score_om(entry1, om_calculate2_orig, larger_is_worse=False), 2) == orig1["OneCluster"]
     assert round(get_worst_score_om(entry1, om_calculate2_sqrt, larger_is_worse=False), 2) == sqrt1["OneCluster"]
     assert round(get_worst_score_om(entry1, om_calculate2_mcc, larger_is_worse=False), 2) == mcc1["OneCluster"]
     assert round(get_worst_score_om(entry1, om_calculate2_spearman, larger_is_worse=False), 2) == spearman1["OneCluster"]
     assert round(get_worst_score_om(entry1, om_calculate2_aupr, larger_is_worse=False), 2) == aupr1["OneCluster"]
-    print "     2. Scaling working correctly"
-    print "Finished testing scaling"
+    print("     2. Scaling working correctly")
+    print("Finished testing scaling")
 
 def xstr(num):
     if num is None:
@@ -106,7 +106,7 @@ def test_add_pseudo():
         assert add_pseudo_counts_om_eff(entry2[0], entry2[1], entry2[2], entry2[3], element) == ans2[xstr(element)]
         assert add_pseudo_counts_om_eff(entry3[0], entry3[1], entry3[2], entry3[3], element) == ans3[xstr(element)]
 
-    print "Add pseudo count functionality seems to be working correctly"
+    print("Add pseudo count functionality seems to be working correctly")
 
 # cases are taken from metric_behavior.py. The answer should be correct....hopefully.... (They seem right)
 def test_calculate1C():
@@ -116,45 +116,45 @@ def test_calculate1C():
     method = ["abs", "sqr"]
     t_phis = np.array([.85,.5,.3])
     t_nssms = np.array([200,200,200])
-    t_entry = zip(t_nssms,t_phis)
+    t_entry = list(zip(t_nssms,t_phis))
 
     for m in method:
         phis = [(.85+.5)/2.0, .3]
         nssms = [400,200]
-        entry = zip(nssms,phis)
+        entry = list(zip(nssms,phis))
         assert round(calculate1C(entry, t_entry, m), 2) == scores[m][0] 
         
         phis = [.85, (.5+.3)/2.0]
         nssms = [200,400]
-        entry = zip(nssms,phis)
+        entry = list(zip(nssms,phis))
         assert round(calculate1C(entry, t_entry, m), 2) == scores[m][1] 
 
         phis = [.55]
         nssms=[600]
-        entry = zip(nssms,phis)
+        entry = list(zip(nssms,phis))
         assert round(calculate1C(entry, t_entry, m), 2) == scores[m][2]
 
         phis = [.85]
         nssms=[600]
-        entry = zip(nssms,phis)
+        entry = list(zip(nssms,phis))
         assert round(calculate1C(entry, t_entry, m), 2) == scores[m][3]
 
         phis = [.9,.8, .5, .3]
         nssms = [100,100,200,200]
-        entry = zip(nssms,phis)
+        entry = list(zip(nssms,phis))
         assert round(calculate1C(entry, t_entry, m), 2) == scores[m][4]
 
         phis = [.85, .55,.45, .3]
         nssms = [200,100,100,200]
-        entry = zip(nssms,phis)
+        entry = list(zip(nssms,phis))
         assert round(calculate1C(entry, t_entry, m), 2) == scores[m][5]
 
         phis = [.85, .5,.35,.25]
         nssms = [200,200,100,100]
-        entry = zip(nssms,phis)
+        entry = list(zip(nssms,phis))
         assert round(calculate1C(entry, t_entry, m), 2) == scores[m][6]
 
-    print "Subchallenge 1C scoring functionalities seem to be working correctly"
+    print("Subchallenge 1C scoring functionalities seem to be working correctly")
 
 def test_calculate2A():
     entry1 = np.matrix([[2, 1, 0], [0, 0, 2]])
@@ -172,7 +172,7 @@ def test_calculate2A():
     entry5 = np.matrix([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
     assert round(om_calculate2A(entry5), 2) == 0
 
-    print "Subchallenge 2A scoring functionalities seem to be working correctly"
+    print("Subchallenge 2A scoring functionalities seem to be working correctly")
 
 def test_calculate3A():
     entry1_om = np.matrix([[2, 1, 0], [0, 0, 2]])
@@ -194,7 +194,7 @@ def test_calculate3A():
     assert round(calculate3A(entry2_om, entry2_truth_data, entry2_ad_pred, entry2_ad_truth), 2) == 0.33
     assert round(calculate3A(entry3_om, entry3_truth_data, entry3_ad_pred, entry3_ad_truth), 2) == 0.06
 
-    print "Subchallenge 3A scoring functionality seems to be working correctly"
+    print("Subchallenge 3A scoring functionality seems to be working correctly")
 
 def test_validate2A():
     predfile2 = ['complex/pred_2A_3A_complex.txt', 
@@ -225,7 +225,7 @@ def test_validate2A():
             om_validate2A(readFile(predfile2[element]), readFile(truthfile2[element]), nssms[element], nssms[element]), 
             om_matrics[element]
             )
-    print "Subchallenge 2A validation seems to be working correctly"
+    print("Subchallenge 2A validation seems to be working correctly")
 
 def test_validate3A():
     file3 = ['complex/pred_3A_complex.txt', 'simple/pred_3A_simple.txt', 'complex/truth_3A_complex.txt', 'simple/truth_3A_simple.txt']
@@ -239,7 +239,7 @@ def test_validate3A():
     for element in range(4):
         np.testing.assert_array_equal(om_validate3A(readFile(file3[element]), ad_matrices[element].shape[0]), ad_matrices[element])
 
-    print "Subchallenge 3A validation seems to be working correctly"
+    print("Subchallenge 3A validation seems to be working correctly")
 
 def test_construct_srm():
     simple_truth = np.matrix([[0, 1, 1], [0, 0, 0], [0, 0, 0]])
@@ -263,7 +263,7 @@ def test_construct_srm():
 
     np.testing.assert_array_equal(construct_relative_matrix(cousin_om, cousin_pred, cousin_truth), relative_matrix_3)
 
-    print "Shared relative matrix seems to be constructed properly"
+    print("Shared relative matrix seems to be constructed properly")
 
 def test_calculate3_pseudoV():
     om1 = np.matrix([[2, 0, 0], [0, 2, 1], [0, 0, 2]])
@@ -290,7 +290,7 @@ def test_calculate3_pseudoV():
     np.testing.assert_array_equal(construct_related_mutations_matrix(om2, ad_pred2, ad_truth2)[0], pdm2)
     np.testing.assert_array_equal(construct_related_mutations_matrix(om2, ad_pred2, ad_truth2)[1], tdm2)
 
-    print "The method to calculate the sym-pseudo-V-measure and its helper functions seem to be working correctly"
+    print("The method to calculate the sym-pseudo-V-measure and its helper functions seem to be working correctly")
 
 def readFile(txt):
     f= open(txt)

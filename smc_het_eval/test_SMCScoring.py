@@ -532,7 +532,7 @@ def test_score2B():
             assert res == 1.0
         else:
             assert res == "NA"
-    print "here"
+    print("here")
 
 # obsolete
 '''
@@ -565,7 +565,7 @@ def test_verify2B():
     for p in itertools.product(b,s):
         params = list(p)
         res = verifyChallenge('2B',*params)
-        print params
+        print(params)
         if params[1] != s[0]:
             assert res == "NA"
         if params[0] == b[0] and params[1] == s[0]:
@@ -853,12 +853,12 @@ def test_integration():
                         '3A': 'python ../SMCScoring.py -c 3A -o sc.json -v --predfiles valid2A.txt valid3A.txt --vcf valid.VCF',
                         '3B': 'python ../SMCScoring.py -c 3B -o sc.json -v --predfiles valid2B.txt valid3B.txt --vcf valid.VCF'
                     }
-    for challenge,cmd_string in score_mapping.iteritems():
+    for challenge,cmd_string in score_mapping.items():
         try:
             os.remove('sc.json')
         except OSError:
             pass
-        print cmd_string
+        print(cmd_string)
         if challenge not in ['3A','2A']:
             os.system(cmd_string)
             f = open('sc.json')
@@ -870,7 +870,7 @@ def test_integration():
             f.close()
             assert out == '1.0'
 
-    for challenge,cmd_string in verify_mapping.iteritems():
+    for challenge,cmd_string in verify_mapping.items():
         try:
             os.remove('sc.json')
         except OSError:
@@ -890,4 +890,4 @@ if __name__ == '__main__':
     #move to the directory with all the test data files    
     os.chdir('./test_data')
     test_score3B()
-    print "Ending without any problems"
+    print("Ending without any problems")

@@ -125,7 +125,7 @@ def om_permute_N_cluster(om, num_of_descendants_in_cluster, rnd=0.01):
                         gammaln(j+1) + 
                         gammaln(num_of_mutations-j) ) *
                     calcDifferent(j, num_of_descendants_in_cluster[i, 0], num_of_mutations, TP, rnd=rnd))
-    print p, q, r
+    print(p, q, r)
     return p+q-r
 
 
@@ -145,7 +145,7 @@ def calculate2_pseudoV(pred, truth, rnd=0.01, full_matrix=True, sym=False):
     res = 0 # result to be returned
 
     # do one row at a time to reduce memory usage
-    for x in xrange(size):
+    for x in range(size):
         # (1 - rnd) will cast the pred_cp/truth_cp matrices automatically if they are int8
         pred_row = (1 - rnd) * pred_cp[x, ] + rnd
         truth_row = (1 - rnd) * truth_cp[x, ] + rnd
@@ -186,11 +186,11 @@ def calculate2_sym_pseudoV_average(arr, ad_truth):
 if __name__ == "__main__":
     ad_truth = np.matrix([[0, 1, 1], [0, 0, 1], [0, 0, 0]])
     arr = [1, 2, 2, 3, 3, 3, 3, 3]
-    print calculate2_sym_pseudoV_average(arr, ad_truth)
+    print(calculate2_sym_pseudoV_average(arr, ad_truth))
 
     om = np.matrix(([1, 0, 0], [1, 1, 0], [0, 1, 4]))
     t = np.matrix(([7], [5], [0]))
-    print om_permute_N_cluster(om, t)
+    print(om_permute_N_cluster(om, t))
 
 
     a1 = np.copy(np.matrix(([0, 1, 1, 1, 1, 1, 1, 1],
@@ -203,14 +203,14 @@ if __name__ == "__main__":
                 [0, 0, 0, 0, 0, 0, 0, 0])))
     b = np.triu(np.ones((8, 8)), k=1)
     #print calculate2_sym_pseudoV(a1, b)
-    print ccm_permute_N_cluster(a1)
+    print(ccm_permute_N_cluster(a1))
 
     ad_truth = np.matrix([[0, 1, 1], [0, 0, 0], [0, 0, 0]])
     arr = [1, 1, 2, 2, 2, 3, 3]
-    print calculate2_sym_pseudoV_average(arr, ad_truth)
+    print(calculate2_sym_pseudoV_average(arr, ad_truth))
 
     om = np.matrix(([2, 0, 0], [0, 2, 1], [0, 0, 2]))
     t = np.matrix(([5], [0], [0]))
     
-    print om_permute_N_cluster(om, t)
+    print(om_permute_N_cluster(om, t))
 

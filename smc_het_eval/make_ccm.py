@@ -128,7 +128,7 @@ def get_ccm_nvar(scenario, t_ccm=None, t_clusters=None, size_clusters=[100,100,1
             num_extra = int(extra_prop*np.sum(size_clusters[0:n_clusters]))
         #    print("num extra big", num_extra, big_extra_prop*np.sum(size_clusters[0:n_clusters]))
      #   print("clusters_before",clusters)
-        num_extra_clust = map(round,extra_prop*size_clusters)
+        num_extra_clust = list(map(round,extra_prop*size_clusters))
       #  print "num_extra ", num_extra_clust
      #   print("num extra clust",num_extra_clust)
         for i in range(n_clusters):

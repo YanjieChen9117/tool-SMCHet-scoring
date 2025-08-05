@@ -17,7 +17,7 @@ def acquire_lock_or_fail(name, max_age=LOCK_DEFAULT_MAX_AGE):
     lock = Lock(name, max_age=max_age)
     if lock.acquire():
         return lock
-    raise LockedException("A lock exists named %s who's age is: %s" % (name, unicode(lock.get_age())))
+    raise LockedException("A lock exists named %s who's age is: %s" % (name, str(lock.get_age())))
 
 
 class Lock(object):
@@ -71,12 +71,12 @@ class Lock(object):
 
 
 def _sleep(seconds=0):
-    print "sleeping", seconds, "seconds"
+    print("sleeping", seconds, "seconds")
     for i in range(seconds):
         time.sleep(1)
         sys.stdout.write('.')
         sys.stdout.flush()
-    print "\ndone sleeping"
+    print("\ndone sleeping")
 
 
 if __name__ == "__main__":

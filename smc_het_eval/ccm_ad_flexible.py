@@ -10,6 +10,7 @@ import re
 import collections
 from scipy.stats import poisson
 from ccm_ad_flex_tests import *
+from functools import reduce
 
 
 class Node:
@@ -41,7 +42,7 @@ class Node:
 	def remove_child(self, child_names):
 		#child_names is a string or string list
 		#put single node names into a list 
-		if isinstance(child_names, basestring) or isinstance(child_names, int):
+		if isinstance(child_names, str) or isinstance(child_names, int):
 			child_names = [child_names]
 		#list of indices to remove
 		to_delete = np.array([],np.int32)
@@ -133,10 +134,10 @@ class Tree:
 		out2A = np.zeros(nssms)
 		struct = self.tree_struct(return_plot_labels=True, plot_labels=True)
 		for node in self.nodes:
-			print node.name
+			print(node.name)
 			out[node.value,i] = 1
 			if outfile is not None:
-				if (isinstance(node.name, basestring)):
+				if (isinstance(node.name, str)):
 					name = struct.loc[ struct['plot_names'] == node.name, 'nodes']
 				else:
 					name = node.name
@@ -190,7 +191,7 @@ class Tree:
 				nodes_df['nodes'][i] = max_int + j
 				j += 1
 			nodes_df['nodes'] = nodes_df['nodes'].astype('int64')
-		print nodes_df 
+		print(nodes_df) 
 		nodes_df = nodes_df.sort_values(by='nodes')
 		if(outfile is not None):
 			nodes_df.to_csv(outfile, header=None,index=None,sep="\t")		
@@ -216,7 +217,7 @@ class Tree:
 				parent_names.append(0)
 
 			
-			if isinstance(node_name, basestring):
+			if isinstance(node_name, str):
 				node_match = re.match(r'N\d',node_name)
 				if node_match is not None:
 					node_number = int(node_name.replace('N',''))
@@ -224,7 +225,7 @@ class Tree:
 					node_number = node_name
 			else:
 				node_number = node_name
-			if isinstance(parent_name, basestring):
+			if isinstance(parent_name, str):
 				parent_match = re.match(r'N\d',parent_name)
 				if parent_match is not None:
 					parent_number = int(parent_name.replace('N',''))
@@ -275,7 +276,7 @@ class Tree:
 
 		if (uniform == True and tier == True):
 			tree_df = tree_df.sort_values(by='plot_names')
-			print tree_df[['nodes','parent','plot_names', 'parent_names', 'tier']]
+			print(tree_df[['nodes','parent','plot_names', 'parent_names', 'tier']])
 			return tree_df.as_matrix(columns=['plot_names', 'parent_names'])
 		
 		if (uniform == True):
@@ -284,7 +285,7 @@ class Tree:
 			return tree_df.as_matrix(columns=['plot_names', 'parent_names'])
 		
 		if (tier == True):
-			print tree_df[['nodes','parent','tier']]
+			print(tree_df[['nodes','parent','tier']])
 		
 		if outfile is not None:
 			tree_df = tree_df.sort_values(by='plot_names')
@@ -292,8 +293,8 @@ class Tree:
 			out_tree_df.to_csv(outfile, header=None,index=None,sep="\t")
 		
 		if plot_labels == True:
-			print tree_df
-			print tree_df[['nodes','parent','plot_names', 'parent_names']]
+			print(tree_df)
+			print(tree_df[['nodes','parent','plot_names', 'parent_names']])
 
 		if return_plot_labels == True:
 			return tree_df[['nodes','parent','plot_names', 'parent_names']]
@@ -319,8 +320,8 @@ class Tree:
 		if num_to_keep == 1:
 			idx_keep = [0]
 		else:
-			idx_keep = range(num_to_keep)
-		idx_split = range(num_to_keep, len(node_idx))
+			idx_keep = list(range(num_to_keep))
+		idx_split = list(range(num_to_keep, len(node_idx)))
 		node.value = node_idx[idx_keep]
 		if same == True:
 			parent = node.parent
@@ -341,7 +342,7 @@ class Tree:
 		#transfer any children
 		if len(node2.children) > 0 :
 			for child in node2.children:
-				print child.name, child.parent.name
+				print(child.name, child.parent.name)
 				self.switch_parent(child.name, node_name1)
 
 		#remove node2 from its parent's children array
@@ -409,19 +410,19 @@ class Tree:
 			self.assign_tiers()
 
 		if(node1_name in node2.ancestors or node2_name in  node1.ancestors):
-			print "ancestors"
+			print("ancestors")
 			common = np.intersect1d(node1.ancestors, node2.ancestors) 
-			print "common", common, len(common)+1
+			print("common", common, len(common)+1)
 			sep = (node1.tier-1) + (node2.tier-1) - 2*(len(common))
 			
 		else:
 			common = np.intersect1d(node1.ancestors, node2.ancestors)
-			print "common", common, len(common)+1
+			print("common", common, len(common)+1)
 			sep = (node1.tier-1) + (node2.tier-1) - 2*(len(common)-1)
 		
-		print node1.ancestors
-		print node2.ancestors
-		print "sep", sep
+		print(node1.ancestors)
+		print(node2.ancestors)
+		print("sep", sep)
 
 		return sep
 
@@ -442,11 +443,11 @@ class Tree:
 			#get all nodes for that tier
 			nodes = self.get_tier(tier)
 			
-			n_children = map(lambda x: len(x.children),nodes)
-			map(lambda x: x.gather_desc_nodes(),nodes)
-			n_desc = map(lambda x: len(x.desc),nodes)
-			names = map(lambda x: x.name,nodes)
-			parent_names = map(lambda x: x.parent.plot_name,nodes)
+			n_children = [len(x.children) for x in nodes]
+			list(map(lambda x: x.gather_desc_nodes(),nodes))
+			n_desc = [len(x.desc) for x in nodes]
+			names = [x.name for x in nodes]
+			parent_names = [x.parent.plot_name for x in nodes]
 			#for the nodes in that tier number them according to the number of children, the number or descendants and the nodes themselves
 			sorted_nodes = [x for _,_,_,_,x in sorted(zip(n_children, n_desc,parent_names, names, nodes), key = operator.itemgetter(0,1,2))]
 
@@ -601,16 +602,16 @@ class Tree:
 			od_node_ranges = collections.OrderedDict(sorted(node_ranges.items()))
 			pois = poisson(1)
 			node_probs = collections.OrderedDict()
-			for node_name in od_node_ranges.keys():
+			for node_name in list(od_node_ranges.keys()):
 				node_probs[node_name] = pois.pmf(od_node_ranges[node_name])
 			
 			sum_probs = sum(node_probs.values())
 			for node_name in od_node_ranges:
 				node_probs[node_name] = node_probs[node_name]/sum_probs
 			
-			tot_ssms = total_ssms(node_probs.keys(), self)
-			num_taken_per_node = np.random.multinomial(n=int(round(extra_prop*tot_ssms)),pvals=node_probs.values())
-			drawn_nodes = [self.get_node(node) for node in od_node_ranges.keys()]
+			tot_ssms = total_ssms(list(node_probs.keys()), self)
+			num_taken_per_node = np.random.multinomial(n=int(round(extra_prop*tot_ssms)),pvals=list(node_probs.values()))
+			drawn_nodes = [self.get_node(node) for node in list(od_node_ranges.keys())]
 
 			# drawn_nodes = np.random.choice(self.nodes, num_nodes, replace = False)
 		i = 0
@@ -655,9 +656,9 @@ def baseline_ad(scenario,print_ad=False, print_ccm = False):
 	ad=get_ad_nvar(scenario,size_clusters=[3,2,2,3,2,4], extra_prop=2.0/12.0)
 	ccm, clusters = get_ccm_nvar(scenario,size_clusters=[3,2,2,3,2,4], extra_prop=2.0/12.0)
 	if print_ad == True:
-		print ad
+		print(ad)
 	if print_ccm == True:
-		print ccm
+		print(ccm)
 	
 	return ad,ccm
 
@@ -685,8 +686,8 @@ def tree_from_df(tree_df, sizes = None):
 	return(tree)
 
 def tree_mistakes(tree, base):
-	print "orig"
-	print tree.tree_struct()
+	print("orig")
+	print(tree.tree_struct())
 	tree.ccm(outfile=base+"truth_2A.txt")
 	tree.tree_struct(plot_labels=True, outfile=base+"truth_3A.txt")
 	tree.out_1C(base+"truth_1C.txt")
@@ -707,14 +708,14 @@ def split_bottom(tree, base):
 	split_bottom_tree.split_node(max(tree_df[:,0]), max(tree_df[:,0])+1, same =False)
 	split_node = split_bottom_tree.get_node(max(tree_df[:,0])+1)
 	split_node.plot_name = max(tree_df[:,0])
-	print "split"
-	print split_bottom_tree.tree_struct(plot_labels = True)
+	print("split")
+	print(split_bottom_tree.tree_struct(plot_labels = True))
 	outname = base + "split_bottom_3A.txt"
 	out1Cname= base+"split_bottom_1C.txt"
 	out2Aname= base+"split_bottom_2A.txt"
 	split_bottom_tree.out_1C(out1Cname)
 	split_bottom_tree.ccm(outfile=out2Aname)
-	print split_bottom_tree.tree_struct(plot_labels=True, outfile = outname )
+	print(split_bottom_tree.tree_struct(plot_labels=True, outfile = outname ))
 	
 	return(split_bottom_tree)
 
@@ -728,16 +729,16 @@ def merge_bottom(tree,base):
 
 	else:
 		bottom_node = tree_df[np.argmax(tree_df[:,0]),:]
-		print bottom_node
+		print(bottom_node)
 		node_1 = bottom_node[1]
 		node_2 = bottom_node[0]
 		
 	merged_bottom_tree.merge_nodes(node_1, node_2)
 	merged_node = merged_bottom_tree.get_node(node_1)
 	merged_node.plot_name = str(node_1) +'/' + str(node_2)
-	print merged_bottom_tree.tree_struct(plot_labels = True)
+	print(merged_bottom_tree.tree_struct(plot_labels = True))
 	outname = base + "merged_bottom_3A.txt"	
-	print merged_bottom_tree.tree_struct(plot_labels=True, outfile = outname )
+	print(merged_bottom_tree.tree_struct(plot_labels=True, outfile = outname ))
 	out1Cname= base+"merged_bottom_1C.txt"
 	out2Aname= base+"merged_bottom_2A.txt"
 	merged_bottom_tree.out_1C(out1Cname)
@@ -754,10 +755,10 @@ def merge_top(tree, base=None):
 	merged_top_tree.merge_nodes(node_1, node_2)
 	merged_node = merged_top_tree.get_node(node_1)
 	merged_node.plot_name = str(node_1) +'/' + str(node_2)
-	print merged_top_tree.tree_struct(plot_labels = True)
+	print(merged_top_tree.tree_struct(plot_labels = True))
 	if (base is not None):
 		outname = base + "merged_top_3A.txt"			
-		print merged_top_tree.tree_struct(plot_labels = True, outfile = outname)
+		print(merged_top_tree.tree_struct(plot_labels = True, outfile = outname))
 		out1Cname= base+"merged_top_1C.txt"
 		out2Aname= base+"merged_top_2A.txt"
 		merged_top_tree.out_1C(out1Cname)	
@@ -771,10 +772,10 @@ def add_extra_bottom(tree, base=None):
 	extra_bottom_tree.extra_node(0.18,parent_name,all_nodes=True, num_nodes=None)
 	parent_node = extra_bottom_tree.get_node('X')
 	parent_node.plot_name = 'X'
-	print extra_bottom_tree.tree_struct(plot_labels = True)
+	print(extra_bottom_tree.tree_struct(plot_labels = True))
 	if (base is not None):
 		outname = base + "extra_bottom_3A.txt"	
-		print extra_bottom_tree.tree_struct(plot_labels=True, outfile = outname)
+		print(extra_bottom_tree.tree_struct(plot_labels=True, outfile = outname))
 		out1Cname= base+"extra_bottom_1C.txt"
 		out2Aname= base+"extra_bottom_2A.txt"
 		extra_bottom_tree.out_1C(out1Cname)
@@ -793,10 +794,10 @@ def add_intermediate_extra_bottom(tree, base=None):
 	extra_bottom_tree.extra_node(0.25, parent_name, max_dist=1, all_nodes=False)
 	parent_node = extra_bottom_tree.get_node('X')
 	parent_node.plot_name = 'X'
-	print extra_bottom_tree.tree_struct(plot_labels = True)
+	print(extra_bottom_tree.tree_struct(plot_labels = True))
 	if (base is not None):
 		outname = base + "extra_intermediate_3A.txt"	
-		print extra_bottom_tree.tree_struct(plot_labels=True, outfile = outname)
+		print(extra_bottom_tree.tree_struct(plot_labels=True, outfile = outname))
 		out1Cname= base+"extra_intermediate_1C.txt"
 		out2Aname= base+"extra_intermediate_2A.txt"
 		extra_bottom_tree.out_1C(out1Cname)
@@ -813,7 +814,7 @@ def merge_top_and_add_extra(tree, base):
 	out2Aname= base+"extra_merged_2A.txt"
 	extra_and_merged.out_1C(out1Cname)	
 	extra_and_merged.ccm(outfile=out2Aname)	
-	print extra_and_merged.tree_struct(plot_labels=True, outfile = outname)
+	print(extra_and_merged.tree_struct(plot_labels=True, outfile = outname))
 	return(extra_and_merged)		
 
 
@@ -823,28 +824,28 @@ def parent_is_grandparent(tree, base):
 	pig_tree = copy.deepcopy(tree)
 	node = pig_tree.get_node(node_name)
 	grandparent = node.parent.parent
-	print "parent is grandparent" 
+	print("parent is grandparent") 
 	if grandparent is None :
 		if (len(node.parent.children) >0 ):
-			print "going to sibling is parent"
+			print("going to sibling is parent")
 			
 			return sibling_is_parent(tree,base)
 		else:	
 			return None
 	if( len(grandparent.children) > 1):
-		print "going to sibling is parent"
+		print("going to sibling is parent")
 		# sibling_is_parent(tree,base)
 		return sibling_is_parent(tree,base)
 	else:
 		pig_tree.switch_parent(node_name, grandparent.name)
-		print pig_tree.tree_struct(plot_labels = True)
+		print(pig_tree.tree_struct(plot_labels = True))
 		outname = base + "pig_3A.txt"	
 		out1Cname= base+"pig_1C.txt"
 		out2Aname= base+"pig_2A.txt"
 		pig_tree.out_1C(out1Cname)
 		pig_tree.ccm(out2Aname)
 	
-		print pig_tree.tree_struct(plot_labels=True, outfile = outname)
+		print(pig_tree.tree_struct(plot_labels=True, outfile = outname))
 		
 		return pig_tree
 
@@ -868,13 +869,13 @@ def linearize(tree,base):
 
 def sibling_is_parent(tree, base):
 	tree_df = tree.tree_struct()
-	print "orig",tree_df
+	print("orig",tree_df)
 	node_name = max(tree_df[:,0])
 	sip_tree = copy.deepcopy(tree)
 	node = sip_tree.get_node(node_name)
-	print node.name
-	print node.parent.name
-	print len(node.parent.children)
+	print(node.name)
+	print(node.parent.name)
+	print(len(node.parent.children))
 	if (len(node.parent.children) > 1):
 		#if the node has a direct sibling then make it its parent
 		sibling_name = tree_df[(tree_df[:,1] == node.parent.name) & (tree_df[:,0] != node_name),0]
@@ -882,18 +883,18 @@ def sibling_is_parent(tree, base):
 		if node.parent.parent is None:
 			return
 		#if the node does not have a sibling 
-		print "here"
+		print("here")
 		sibling_name = tree_df[(tree_df[:,1] == node.parent.parent.name) & (tree_df[:,0] != node.parent.name),0]
 		node_name = node.parent.name
-	print "sibling", sibling_name
+	print("sibling", sibling_name)
 	sip_tree.switch_parent(node_name, sibling_name)		
-	print sip_tree.tree_struct(plot_labels = True)
+	print(sip_tree.tree_struct(plot_labels = True))
 	outname = base + "sip_3A.txt"	
 	out1Cname= base+"sip_1C.txt"
 	out2Aname= base+"sip_2A.txt"
 	sip_tree.out_1C(out1Cname)
 	sip_tree.ccm(out2Aname)	
-	print sip_tree.tree_struct(plot_labels=True, outfile = outname)	
+	print(sip_tree.tree_struct(plot_labels=True, outfile = outname))	
 	return sip_tree
 
 def one_cluster_full(tree, ordered =True):
@@ -915,7 +916,7 @@ mistake_dict ={
 }
 
 def run_scenario(tree,sc,base):
-	print sc
+	print(sc)
 	if(sc != 'Truth'):
 		func = mistake_dict[sc]
 		mistake_tree = func(tree,base)
@@ -926,7 +927,7 @@ def run_scenario(tree,sc,base):
 def n_cluster_one_lineage(nssm, ordered =True):
 	if ordered == True:
 		tree = Tree(name ='N0', size =1)
-		ssms = range(1,nssm)
+		ssms = list(range(1,nssm))
 	last_ssm  = tree.root
 	for ssm in ssms:
 		node = tree.create_node('N'+str(ssm), parent = last_ssm, size =1)
@@ -941,7 +942,7 @@ def n_cluster_two_lineages(nssm, ordered = True):
 	if ordered == True:
 		tree = Tree(name='N0', size =1)
 		l1_root = tree.create_node('N1', parent = tree.root, size =1)
-		l1_ssms = range(1,nssm/2)
+		l1_ssms = list(range(1,nssm/2))
 
 	last_ssm  = l1_root
 	for ssm in l1_ssms:
@@ -949,7 +950,7 @@ def n_cluster_two_lineages(nssm, ordered = True):
 		last_ssm = node
 
 	l2_root = tree.create_node('N2', parent = tree.root, size =1)
-	l2_ssms = range((nssm/2+1),(nssm-1))
+	l2_ssms = list(range((nssm/2+1),(nssm-1)))
 	last_ssm  = l2_root
 	for ssm in l2_ssms:
 		node = tree.create_node('N'+str(ssm), parent = last_ssm, size =1)
@@ -1102,7 +1103,7 @@ def linear_to_branching(tree):
 	tree.switch_parent('N4','N2')
 	node = tree.get_node('N3')
 	node.gather_child_idx()
-	print tree.ad()
+	print(tree.ad())
 
 def matches(scenario, f, pass_l, scenarios,  **kwargs):
 	orig_ad, orig_ccm = baseline_ad(scenario)
@@ -1110,27 +1111,27 @@ def matches(scenario, f, pass_l, scenarios,  **kwargs):
 	new_ad = new_tree.ad()
 
 	new_ccm = new_tree.ccm()
-	print scenario
+	print(scenario)
 	pass_v = 0
 	if (np.array_equal(new_ad,orig_ad)):
 	    print('Pass AD')
 	    # return('Pass')
 	else: 
 		print('Fail AD')
-		print "new"
-		print new_ad
-		print "orig"
-		print orig_ad
+		print("new")
+		print(new_ad)
+		print("orig")
+		print(orig_ad)
 		pass_v = 1
 	if (np.array_equal(new_ccm,orig_ccm)):
 	    print('Pass CCM')
 	    # return('Pass')
 	else: 
 		print('Fail CCM')
-		print "new"
-		print new_ccm
-		print "orig"
-		print orig_ccm
+		print("new")
+		print(new_ccm)
+		print("orig")
+		print(orig_ccm)
 		pass_v = 1
 	pass_l.append((scenario, pass_v))
 
@@ -1164,17 +1165,17 @@ def test_all():
 	fail = [sc[0] for sc in pass_l if sc[1] > 0]
 	if len(fail)>0:
 		for sc in fail:
-			print "failed at", sc  #print scenarios#scenarios[np.where(pass_l>0)]
+			print("failed at", sc)  #print scenarios#scenarios[np.where(pass_l>0)]
 	else:
-		print "all passed"
+		print("all passed")
 
 def test_scenario(t,f,**kwargs):
 	tree = t()
 	new_tree = f(tree, **kwargs)
 	new_ad = new_tree.ad()
 	new_ccm = new_tree.ccm()
-	print new_ad
-	print new_ccm
+	print(new_ad)
+	print(new_ccm)
 
 
 

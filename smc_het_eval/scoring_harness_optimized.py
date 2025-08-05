@@ -4,8 +4,14 @@ from permutations import*
 import gc
 import random
 import pdb
+from functools import reduce
 
 def om_validate2A (pred_data, truth_data, nssms_x, nssms_y, filter_mut=None, mask=None, subchallenge="2A"):
+    print("Current function: om_validate2A")
+    print("filter_mut: ", len(filter_mut) if filter_mut else "None")
+    print("mask: ", len(mask) if mask else "None")
+    print("nssms_x: ", nssms_x)
+    print("nssms_y: ", nssms_y)
     '''
     Creates overlapping matrix for SubChallenge 2 and 3
     :param pred_data: inputed data from prediction file
@@ -20,14 +26,14 @@ def om_validate2A (pred_data, truth_data, nssms_x, nssms_y, filter_mut=None, mas
 
     if type(pred_data) is str:
         pred_data = pred_data.split('\n')
-    pred_data = filter(None, pred_data)
+    pred_data = [_f for _f in pred_data if _f]
     pred_data = [x for i, x in enumerate(pred_data) if i in mask] if mask else pred_data
      
     if len(pred_data) != nssms_x:
         raise ValidationError("Prediction file contains a different number of lines than the specification file. Input: %s lines. Specification: %s lines" % (len(pred_data), nssms_x))
     pred_cluster_entries = set()
 
-    for i in xrange(len(pred_data)):
+    for i in range(len(pred_data)):
         try:
             pred_data[i] = int(pred_data[i])
             pred_cluster_entries.add(pred_data[i])
@@ -38,14 +44,14 @@ def om_validate2A (pred_data, truth_data, nssms_x, nssms_y, filter_mut=None, mas
 
     if type(truth_data) is str:
         truth_data = truth_data.split('\n')
-    truth_data = filter(None, truth_data)
+    truth_data = [_f for _f in truth_data if _f]
     truth_data = [x for i, x in enumerate(truth_data) if i in mask] if mask else truth_data
 
     if len(truth_data) != nssms_y:
         raise ValidationError("Truth file contains a different number of lines than the specification file. Input: %s lines. Specification: %s lines" % (len(truth_data), nssms_y))
 
     truth_cluster_entries = set()
-    for i in xrange(len(truth_data)):
+    for i in range(len(truth_data)):
         try:
             truth_data[i] = int(truth_data[i])
             truth_cluster_entries.add(truth_data[i])
@@ -559,7 +565,7 @@ def om_validate3A(data_3A, predK, mask=None):
     """
     # read in the data
     data_3A = data_3A.split('\n')
-    data_3A = filter(None, data_3A)
+    data_3A = [_f for _f in data_3A if _f]
     if len(data_3A) != predK:
         raise ValidationError("Input file contains a different number of lines (%d) than expected (%d)")
     data_3A = [x.split('\t') for x in data_3A]
@@ -572,7 +578,7 @@ def om_validate3A(data_3A, predK, mask=None):
         except ValueError:
             raise ValidationError("Entry in line %d could not be cast as integer" % (i+1))
 
-    if [x[0] for x in data_3A] != range(1, predK+1):
+    if [x[0] for x in data_3A] != list(range(1, predK+1)):
         raise ValidationError("First column must have %d entries in acending order starting with 1" % predK)
 
     for i in range(len(data_3A)):
@@ -595,7 +601,7 @@ def om_validate3A(data_3A, predK, mask=None):
                         ad_cluster[j][k] = 1
 
     # check if all nodes are connected. If there are not, we could possibly run the above code again 
-    if (not np.array_equal(np.nonzero(ad_cluster[0])[0], map(lambda x: x+1, range(len(data_3A))))):
+    if (not np.array_equal(np.nonzero(ad_cluster[0])[0], [x+1 for x in range(len(data_3A))])):
         for i in range(len(data_3A)+1):
             for j in range(len(data_3A)+1):
                 if (ad_cluster[j][i] == 1):
@@ -605,7 +611,7 @@ def om_validate3A(data_3A, predK, mask=None):
                         if(ad_cluster[i][k] == 1):
                             ad_cluster[j][k] = 1
 
-    if (not np.array_equal(np.nonzero(ad_cluster[0])[0], map(lambda x: x+1, range(len(data_3A))))):
+    if (not np.array_equal(np.nonzero(ad_cluster[0])[0], [x+1 for x in range(len(data_3A))])):
         raise ValidationError("Root of phylogeny not ancestor of all clusters / Tree is not connected.")
 
     # print ad_cluster
@@ -854,7 +860,7 @@ def calculate3A(om, truth_data, ad_pred, ad_truth, rnd=1e-50):
     n_scores.append(set_to_zero(calculate3A_worst(om, ad_pred, ad_truth, scenario="NCluster", truth_data=truth_data, rnd=rnd)))
     n_scores.append(set_to_zero(calculate3A_worst(om, ad_pred, ad_truth, scenario="NCluster", modification="transpose", truth_data=truth_data, rnd=rnd)))
     n_scores.append(set_to_zero(calculate3A_worst(om, ad_pred, ad_truth, scenario="NCluster", modification="cousin", rnd=rnd)))
-    print "DEBUG: n_scores: ", n_scores
+    print("DEBUG: n_scores: ", n_scores)
     
     gc.collect()
     n_scores_permuted = []
@@ -872,15 +878,15 @@ def calculate3A(om, truth_data, ad_pred, ad_truth, rnd=1e-50):
     for i in range(20):
         n_scores_permute_1.append(set_to_zero(calculate3A_worst(om, ad_pred, ad_truth, scenario="NCluster", truth_data=truth_data, rnd=rnd, permute=True)))
         n_scores_permute_2.append(set_to_zero(calculate3A_worst(om, ad_pred, ad_truth, scenario="NCluster", modification="transpose", truth_data=truth_data, rnd=rnd, permute=True)))
-    print "DEBUG: n_scores_permute_1: ", n_scores_permute_1
-    print "DEBUG: n_scores_permute_2: ", n_scores_permute_2
+    print("DEBUG: n_scores_permute_1: ", n_scores_permute_1)
+    print("DEBUG: n_scores_permute_2: ", n_scores_permute_2)
 
     n_scores_permuted.append(np.mean(n_scores_permute_1))
     n_scores_permuted.append(np.mean(n_scores_permute_2))
     # end of temporary code for mutation permutations of NCluster
     # ----------------------------------------------------------
     n_scores_permuted.append(n_scores[2])
-    print "DEBUG: n_scores_permuted: ", n_scores_permuted
+    print("DEBUG: n_scores_permuted: ", n_scores_permuted)
 
     del truth_data
     gc.collect()
@@ -889,13 +895,13 @@ def calculate3A(om, truth_data, ad_pred, ad_truth, rnd=1e-50):
     scores.append(set_to_zero(calculate3A_final(om, ad_pred, ad_truth, rnd=rnd)))
     scores.append(set_to_zero(calculate3A_final(om, ad_pred, ad_truth, modification="transpose", rnd=rnd)))
     scores.append(set_to_zero(calculate3A_final(om, ad_pred, ad_truth, modification="cousin", rnd=rnd)))
-    print "DEBUG: scores: ", scores
+    print("DEBUG: scores: ", scores)
 
     one_scores = []
     one_scores.append(set_to_zero(calculate3A_worst(om, ad_pred, ad_truth, scenario="OneCluster", rnd=rnd)))
     one_scores.append(set_to_zero(calculate3A_worst(om, ad_pred, ad_truth, scenario="OneCluster", modification="transpose", rnd=rnd)))
     one_scores.append(set_to_zero(calculate3A_worst(om, ad_pred, ad_truth, scenario="OneCluster", modification="cousin", rnd=rnd)))
-    print "DEBUG: one_scores: ", one_scores
+    print("DEBUG: one_scores: ", one_scores)
 
     score = sum(scores) / 3.0
     one_score = sum(one_scores) / 3.0
@@ -1052,7 +1058,7 @@ def get_NCluster_om_3A(om, truth_data, permute=False):
         worst_om[truth_data[i]-1, i] = 1
 
     if permute:
-        pos = np.random.permutation(range(0, len(truth_data)))
+        pos = np.random.permutation(list(range(0, len(truth_data))))
         worst_om = worst_om[:, pos]
 
     return worst_om

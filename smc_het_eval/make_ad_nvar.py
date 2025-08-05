@@ -1,6 +1,7 @@
 import numpy as np
 from SMCScoring import *
 from metric_behavior import *
+from functools import reduce
 
 np.set_printoptions(threshold='nan')
 def run_case(scenario,nssm):
@@ -17,7 +18,7 @@ def run_case(scenario,nssm):
     return new, orig
 
 def test_same(scenario,nssm=2):
-    print("Testing ", scenario)
+    print(("Testing ", scenario))
     new, orig = run_case(scenario,nssm)
     if (np.array_equal(new,orig)):
         print('Pass')
@@ -37,11 +38,11 @@ def get_ad_nvar(scenario,  t_ad=None, size_clusters=100, nssms=None, prop_split=
         # for i in range(n_clusters):
         if (lab == True):
 
-            labels = range(1,7)  
-            print reduce(lambda x,y: np.concatenate(x,y), map(lambda x: np.repeat(labels[x],size_clusters[x]), range(6)))
+            labels = list(range(1,7))  
+            print(reduce(lambda x,y: np.concatenate(x,y), [np.repeat(labels[x],size_clusters[x]) for x in range(6)]))
             t_ad =  np.zeros((np.sum(size_clusters)+1,np.sum(size_clusters)+1))
-            t_ad[np.sum(size_clusters),:np.sum(size_clusters)] = reducemap(lambda x: np.repeat(labels[x],size_clusters[x]), range(6))
-            t_ad[0:np.sum(size_clusters),np.sum(size_clusters)] = map(lambda x: np.repeat(labels[x],size_clusters[x]), range(6))
+            t_ad[np.sum(size_clusters),:np.sum(size_clusters)] = reducemap(lambda x: np.repeat(labels[x],size_clusters[x]), list(range(6)))
+            t_ad[0:np.sum(size_clusters),np.sum(size_clusters)] = [np.repeat(labels[x],size_clusters[x]) for x in range(6)]
         else:
             t_ad =  np.zeros((np.sum(size_clusters),np.sum(size_clusters)))
 #        t_ad[size_clusters[0]:np.sum(size_clusters[0:2]),:] = 1
@@ -125,13 +126,13 @@ def get_ad_nvar(scenario,  t_ad=None, size_clusters=100, nssms=None, prop_split=
         return ad
     elif scenario == "ParentIsSiblingWithChildren":
         ad = np.copy(t_ad)
-        ad[np.sum(size_clusters[0:2]):np.sum(size_clusters[0:3]), range(size_clusters[0],np.sum(size_clusters[0:2]))+range(np.sum(size_clusters[0:3]),np.sum(size_clusters[0:5]))] = 1 #adjust cluster 3's ancestry
+        ad[np.sum(size_clusters[0:2]):np.sum(size_clusters[0:3]), list(range(size_clusters[0],np.sum(size_clusters[0:2])))+list(range(np.sum(size_clusters[0:3]),np.sum(size_clusters[0:5])))] = 1 #adjust cluster 3's ancestry
         # ad[2*size_clusters:3*size_clusters, range(size_clusters,2*size_clusters)+range(3*size_clusters,5*size_clusters)] = 1 #adjust cluster 3's ancestry
         return ad
     elif scenario == "ParentIsNieceWithChildren":
         ad = np.copy(t_ad)
-        ad[np.sum(size_clusters[0:2]):np.sum(size_clusters[0:3]), range(size_clusters[0],np.sum(size_clusters[0:2]))+range(np.sum(size_clusters[0:3]),np.sum(size_clusters[0:5]))] = 1 #adjust cluster 3's ancestry
-        ad[np.sum(size_clusters[0:5]):np.sum(size_clusters[0:6]), range(size_clusters[0],np.sum(size_clusters[0:2]))+range(np.sum(size_clusters[0:3]),np.sum(size_clusters[0:5]))] = 1 #adjust cluster 3's ancestry
+        ad[np.sum(size_clusters[0:2]):np.sum(size_clusters[0:3]), list(range(size_clusters[0],np.sum(size_clusters[0:2])))+list(range(np.sum(size_clusters[0:3]),np.sum(size_clusters[0:5])))] = 1 #adjust cluster 3's ancestry
+        ad[np.sum(size_clusters[0:5]):np.sum(size_clusters[0:6]), list(range(size_clusters[0],np.sum(size_clusters[0:2])))+list(range(np.sum(size_clusters[0:3]),np.sum(size_clusters[0:5])))] = 1 #adjust cluster 3's ancestry
         # ad[2*size_clusters:3*size_clusters, range(size_clusters,2*size_clusters)+range(3*size_clusters,5*size_clusters)] = 1 #adjust cluster 3's ancestry
         # ad[5*size_clusters:6*size_clusters, range(size_clusters,2*size_clusters)+range(3*size_clusters,5*size_clusters)] = 1 #adjust cluster 6's ancestry
         return ad
@@ -144,8 +145,8 @@ def get_ad_nvar(scenario,  t_ad=None, size_clusters=100, nssms=None, prop_split=
 #        if nssms is None:
 #            return np.triu(np.ones(t_ad.shape))
         ad = np.ones(t_ad.shape, dtype=np.int8)
-        for i in xrange(t_ad.shape[0]):
-            for j in xrange(i + 1):
+        for i in range(t_ad.shape[0]):
+            for j in range(i + 1):
                 ad[i, j] = 0
         return ad
     elif scenario == "NClusterTwoLineages":
@@ -155,7 +156,7 @@ def get_ad_nvar(scenario,  t_ad=None, size_clusters=100, nssms=None, prop_split=
         return ad
     elif scenario == "NClusterCorrectLineage":
         ad = np.triu(np.ones(t_ad.shape), k=1)
-        ad[size_clusters[0]:np.sum(size_clusters[0:2]),range(np.sum(size_clusters[0:2]),np.sum(size_clusters[0:3]))+range(np.sum(size_clusters[0:5]),np.sum(size_clusters[0:6]))] = 0 # equivalent of cluster 2 from true AD matrix
+        ad[size_clusters[0]:np.sum(size_clusters[0:2]),list(range(np.sum(size_clusters[0:2]),np.sum(size_clusters[0:3])))+list(range(np.sum(size_clusters[0:5]),np.sum(size_clusters[0:6])))] = 0 # equivalent of cluster 2 from true AD matrix
         ad[np.sum(size_clusters[0:2]):np.sum(size_clusters[0:3]),np.sum(size_clusters[0:3]):np.sum(size_clusters[0:5])] = 0 # cluster 3 from true AD matrix
         ad[np.sum(size_clusters[0:3]):np.sum(size_clusters[0:4]),np.sum(size_clusters[0:4]):] = 0 # cluster 4 from true AD matrix
         ad[np.sum(size_clusters[0:4]):np.sum(size_clusters[0:5]),np.sum(size_clusters[0:5]):np.sum(size_clusters[0:6])] = 0 # cluster 5 from true AD matrix
@@ -172,16 +173,16 @@ def get_ad_nvar(scenario,  t_ad=None, size_clusters=100, nssms=None, prop_split=
      #   num_extra = int(float(extra_prop)*np.sum(size_clusters)/size_clusters.shape[0])
       #  print "num_extra ", num_extra
         if scenario == "SmallExtraNewBot": #clusters 1, 3, and 6 are ancestors to the new extra cluster
-            range_ones = [range(0,size_clusters[0]) ,range(np.sum(size_clusters[0:2]),np.sum(size_clusters[0:3])),range(np.sum(size_clusters[0:5]),np.sum(size_clusters[0:6])) ] # clusters 1, 3, and 6 will be ancestors to the new extra cluster
+            range_ones = [list(range(0,size_clusters[0])) ,list(range(np.sum(size_clusters[0:2]),np.sum(size_clusters[0:3]))),list(range(np.sum(size_clusters[0:5]),np.sum(size_clusters[0:6]))) ] # clusters 1, 3, and 6 will be ancestors to the new extra cluster
             if int(round(extra_prop*size_clusters[0])) >0 :
                 #adjust cluster 1 for mutations lost from cluster 1
-                range_ones[0] =  range(0+int(round(extra_prop*size_clusters[0])), np.sum(size_clusters[0]))
+                range_ones[0] =  list(range(0+int(round(extra_prop*size_clusters[0])), np.sum(size_clusters[0])))
             if int(round(extra_prop*size_clusters[2])) >0 :
                 #adjust cluster 3 for mutations lost from cluster 3
-                range_ones[1] =  range(np.sum(size_clusters[0:2])+int(round(extra_prop*size_clusters[2])), np.sum(size_clusters[0:3]))
+                range_ones[1] =  list(range(np.sum(size_clusters[0:2])+int(round(extra_prop*size_clusters[2])), np.sum(size_clusters[0:3])))
             if int(round(extra_prop*size_clusters[5])) >0 :
                 #adjust cluster 6 for mutations lost from cluster 6
-                range_ones[2] =  range(np.sum(size_clusters[0:5])+int(round(extra_prop*size_clusters[5])), np.sum(size_clusters[0:6]))
+                range_ones[2] =  list(range(np.sum(size_clusters[0:5])+int(round(extra_prop*size_clusters[5])), np.sum(size_clusters[0:6])))
 
             range_ones = range_ones[0] + range_ones[1]+ range_ones[2]
          #   print "range\n",range_ones
@@ -202,13 +203,13 @@ def get_ad_nvar(scenario,  t_ad=None, size_clusters=100, nssms=None, prop_split=
             return ad
         elif scenario == "SmallExtraCurBot":
             ad = np.copy(t_ad)
-            range_ones = [range(0,size_clusters[0]) ,range(np.sum(size_clusters[0:2]),np.sum(size_clusters[0:3]))] # clusters 1 and 3 will be ancestors to the new extra cluster
+            range_ones = [list(range(0,size_clusters[0])) ,list(range(np.sum(size_clusters[0:2]),np.sum(size_clusters[0:3])))] # clusters 1 and 3 will be ancestors to the new extra cluster
             if int(round(extra_prop*size_clusters[0])) >0 :
                 #adjust cluster 1 for mutations lost from cluster 1
-                range_ones[0] =  range(0+int(round(extra_prop*size_clusters[0])), np.sum(size_clusters[0]))
+                range_ones[0] =  list(range(0+int(round(extra_prop*size_clusters[0])), np.sum(size_clusters[0])))
             if int(round(extra_prop*size_clusters[2])) >0 :
                 #adjust cluster 3 for mutations lost from cluster 3
-                range_ones[1] =  range(np.sum(size_clusters[0:2])+int(round(extra_prop*size_clusters[2])), np.sum(size_clusters[0:3]))
+                range_ones[1] =  list(range(np.sum(size_clusters[0:2])+int(round(extra_prop*size_clusters[2])), np.sum(size_clusters[0:3])))
             range_ones = range_ones[0] + range_ones[1]
             
             if int(round(extra_prop*size_clusters[0])) >0 :
@@ -236,11 +237,11 @@ def get_ad_nvar(scenario,  t_ad=None, size_clusters=100, nssms=None, prop_split=
         elif scenario == "SmallExtraMid":
             ad = np.copy(t_ad)
             ad[:,0:int(round(extra_prop*size_clusters[0]))] = 0
-            ad[range(int(round(extra_prop*size_clusters[0])),size_clusters[0]),0:int(round(extra_prop*size_clusters[0]))] = 1
+            ad[list(range(int(round(extra_prop*size_clusters[0])),size_clusters[0])),0:int(round(extra_prop*size_clusters[0]))] = 1
             ad[0:int(round(extra_prop*size_clusters[0])),:] = 0
             for i in range(1,6):
                 ad[:,np.sum(size_clusters[0:i]):np.sum(size_clusters[0:i])+int(round(extra_prop*size_clusters[i]))] = 0
-                ad[range(int(round(extra_prop*size_clusters[0])),size_clusters[0]),np.sum(size_clusters[0:i]): np.sum(size_clusters[0:i])+int(round(extra_prop*size_clusters[i]))] = 1
+                ad[list(range(int(round(extra_prop*size_clusters[0])),size_clusters[0])),np.sum(size_clusters[0:i]): np.sum(size_clusters[0:i])+int(round(extra_prop*size_clusters[i]))] = 1
                 ad[np.sum(size_clusters[0:i]):np.sum(size_clusters[0:i])+int(round(extra_prop*size_clusters[i])),:] = 0
             # for i in range(0,6):
             #     ad[:,size_clusters*i] = 0
@@ -252,15 +253,15 @@ def get_ad_nvar(scenario,  t_ad=None, size_clusters=100, nssms=None, prop_split=
             range_ones=[]
             
             if int(round(extra_prop*size_clusters[0])) >0 :
-                range_ones = range_ones + range(int(round(extra_prop*size_clusters[0])),size_clusters[0])
+                range_ones = range_ones + list(range(int(round(extra_prop*size_clusters[0])),size_clusters[0]))
             else:
-                range_ones = range(0,size_clusters[0])
+                range_ones = list(range(0,size_clusters[0]))
             for i in range(1,6):
                 if int(round(extra_prop*size_clusters[i])) >0 :
           #          print "true", i
-                    range_ones = range_ones + range(np.sum(size_clusters[0:i])+int(round(extra_prop*size_clusters[i])),np.sum(size_clusters[0:i+1]))
+                    range_ones = range_ones + list(range(np.sum(size_clusters[0:i])+int(round(extra_prop*size_clusters[i])),np.sum(size_clusters[0:i+1])))
                 else:
-                    range_ones = range_ones + range(np.sum(size_clusters[0:i]),np.sum(size_clusters[0:i+1]))
+                    range_ones = range_ones + list(range(np.sum(size_clusters[0:i]),np.sum(size_clusters[0:i+1])))
              #   print range_ones
             if int(round(extra_prop*size_clusters[0])) >0 :
                 ad[0:int(round(extra_prop*size_clusters[0])),range_ones] = 1

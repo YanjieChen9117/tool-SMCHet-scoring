@@ -2,6 +2,7 @@ import numpy as np
 from permutations import*
 
 import gc
+from functools import reduce
 
 def om_validate2A (pred_data, truth_data, nssms_x, nssms_y, filter_mut=None, mask=None, subchallenge="2A"):
     '''
@@ -15,14 +16,14 @@ def om_validate2A (pred_data, truth_data, nssms_x, nssms_y, filter_mut=None, mas
     :return: overlapping matrix and (for subchallenge 3) a list which specifies the cluster of each mutation
     '''
     pred_data = pred_data.split('\n')
-    pred_data = filter(None, pred_data)
+    pred_data = [_f for _f in pred_data if _f]
     pred_data = [x for i, x in enumerate(pred_data) if i in mask] if mask else pred_data
      
     if len(pred_data) != nssms_x:
         raise ValidationError("Prediction file contains a different number of lines than the specification file. Input: %s lines. Specification: %s lines" % (len(pred_data), nssms_x))
     pred_cluster_entries = set()
 
-    for i in xrange(len(pred_data)):
+    for i in range(len(pred_data)):
         try:
             pred_data[i] = int(pred_data[i])
             pred_cluster_entries.add(pred_data[i])
@@ -32,14 +33,14 @@ def om_validate2A (pred_data, truth_data, nssms_x, nssms_y, filter_mut=None, mas
     num_pred_clusters = max(pred_cluster_entries)
 
     truth_data = truth_data.split('\n')
-    truth_data = filter(None, truth_data)
+    truth_data = [_f for _f in truth_data if _f]
     truth_data = [x for i, x in enumerate(truth_data) if i in mask] if mask else truth_data
 
     if len(truth_data) != nssms_y:
         raise ValidationError("Truth file contains a different number of lines than the specification file. Input: %s lines. Specification: %s lines" % (len(truth_data), nssms_y))
 
     truth_cluster_entries = set()
-    for i in xrange(len(truth_data)):
+    for i in range(len(truth_data)):
         try:
             truth_data[i] = int(truth_data[i])
             truth_cluster_entries.add(truth_data[i])
@@ -411,7 +412,7 @@ def om_validate3A(data_3A, predK, mask=None):
     """
     # read in the data
     data_3A = data_3A.split('\n')
-    data_3A = filter(None, data_3A)
+    data_3A = [_f for _f in data_3A if _f]
     if len(data_3A) != predK:
         raise ValidationError("Input file contains a different number of lines (%d) than expected (%d)")
     data_3A = [x.split('\t') for x in data_3A]
@@ -424,7 +425,7 @@ def om_validate3A(data_3A, predK, mask=None):
         except ValueError:
             raise ValidationError("Entry in line %d could not be cast as integer" % (i+1))
 
-    if [x[0] for x in data_3A] != range(1, predK+1):
+    if [x[0] for x in data_3A] != list(range(1, predK+1)):
         raise ValidationError("First column must have %d entries in acending order starting with 1" % predK)
 
     for i in range(len(data_3A)):
@@ -447,7 +448,7 @@ def om_validate3A(data_3A, predK, mask=None):
                         ad_cluster[j][k] = 1
 
     # check if all nodes are connected. If there are not, we could possibly run the above code again 
-    if (not np.array_equal(np.nonzero(ad_cluster[0])[0], map(lambda x: x+1, range(len(data_3A))))):
+    if (not np.array_equal(np.nonzero(ad_cluster[0])[0], [x+1 for x in range(len(data_3A))])):
         for i in range(len(data_3A)+1):
             for j in range(len(data_3A)+1):
                 if (ad_cluster[j][i] == 1):
@@ -457,7 +458,7 @@ def om_validate3A(data_3A, predK, mask=None):
                         if(ad_cluster[i][k] == 1):
                             ad_cluster[j][k] = 1
 
-    if (not np.array_equal(np.nonzero(ad_cluster[0])[0], map(lambda x: x+1, range(len(data_3A))))):
+    if (not np.array_equal(np.nonzero(ad_cluster[0])[0], [x+1 for x in range(len(data_3A))])):
         raise ValidationError("Root of phylogeny not ancestor of all clusters / Tree is not connected.")
 
     # print ad_cluster

@@ -14,13 +14,13 @@ import sys
 tsv_dir = './scoring_metric_data/text_files/' # directory to save tsv's to
 
 def scoring1A_behavior(method='abs'):
-    guesses = np.array(range(0,101))/100.0
-    truths = np.array(range(10,110,10))/100.0
+    guesses = np.array(list(range(0,101)))/100.0
+    truths = np.array(list(range(10,110,10)))/100.0
     res = []
     for i in range(len(truths)):
         for j in range(len(guesses)):
             res.append( [truths[i],guesses[j],calculate1A(guesses[j],truths[i], method)] )
-    res = [map(str,x) for x in res]
+    res = [list(map(str,x)) for x in res]
     res = ['\t'.join(x) for x in res]
     f = open(tsv_dir + 'scoring1A_behavior_' + method + '.tsv', 'w')
     f.write('\n'.join(res))
@@ -28,13 +28,13 @@ def scoring1A_behavior(method='abs'):
 
 
 def scoring1B_behavior(method='normalized'):
-    guesses = np.array(range(1,11))
-    truths = np.array(range(1,6))
+    guesses = np.array(list(range(1,11)))
+    truths = np.array(list(range(1,6)))
     res = [] 
     for i in range(len(truths)):
         for j in range(len(guesses)):
             res.append( [truths[i],guesses[j],calculate1B(guesses[j],truths[i], method)] )
-    res = [map(str,x) for x in res]
+    res = [list(map(str,x)) for x in res]
     res = ['\t'.join(x) for x in res]
     f = open(tsv_dir + 'scoring1B_behavior_' + method + '.tsv', 'w')
     f.write('\n'.join(res))
@@ -44,7 +44,7 @@ def scoring1C_behavior(method='abs'):
     # Baseline Truth
     t_phis = np.array([.85,.5,.3])
     t_nssms = np.array([200,200,200])
-    t_entry = zip(t_nssms,t_phis)
+    t_entry = list(zip(t_nssms,t_phis))
     n_iter = 100
 
     # Zero-mean noise in phi
@@ -55,8 +55,8 @@ def scoring1C_behavior(method='abs'):
             phis = []
             for p in t_phis:
                 phis.append(np.random.beta(p*c,(1-p)*c))
-            res.append([c,phis,calculate1C(zip(t_nssms,phis), t_entry, method)])
-    res = [map(str,x) for x in res]
+            res.append([c,phis,calculate1C(list(zip(t_nssms,phis)), t_entry, method)])
+    res = [list(map(str,x)) for x in res]
     res = ['\t'.join(x) for x in res]
     f = open(tsv_dir + 'scoring1C_phi_ZM_behavior_' + method + '.tsv', 'w')
     f.write('\n'.join(res))
@@ -67,8 +67,8 @@ def scoring1C_behavior(method='abs'):
     sys_errors = np.concatenate((sys_errors,-sys_errors))
     res = []
     for sys_error in sys_errors:
-        res.append([sys_error, calculate1C(zip(t_nssms,t_phis+sys_error), t_entry, method)])
-    res = [map(str,x) for x in res]
+        res.append([sys_error, calculate1C(list(zip(t_nssms,t_phis+sys_error)), t_entry, method)])
+    res = [list(map(str,x)) for x in res]
     res = ['\t'.join(x) for x in res]
     f = open(tsv_dir + 'scoring1C_phi_sys_behavior_' + method + '.tsv', 'w')
     f.write('\n'.join(res))
@@ -80,13 +80,13 @@ def scoring1C_behavior(method='abs'):
     for c in concentration:
         for i in range(n_iter):
             rd = np.random.dirichlet([c,c,c]) * sum(t_nssms)
-            rd = map(round,rd)
+            rd = list(map(round,rd))
             remainder = sum(t_nssms) - sum(rd)
             #Randomly assign remainder
             rd[np.random.randint(0,len(rd))] += remainder
-            rd = map(int,rd)
-            res.append([c,rd,calculate1C(zip(rd,t_phis), t_entry, method)])
-    res = [map(str,x) for x in res]
+            rd = list(map(int,rd))
+            res.append([c,rd,calculate1C(list(zip(rd,t_phis)), t_entry, method)])
+    res = [list(map(str,x)) for x in res]
     res = ['\t'.join(x) for x in res]
     f = open(tsv_dir + 'scoring1C_nssm_behavior_' + method + '.tsv', 'w')
     f.write('\n'.join(res))
@@ -102,11 +102,11 @@ def scoring1C_behavior(method='abs'):
                 if not c_nssm is None: # if error should be added to the number of SSMs assigned to each subclone do it
                     # Determine the proportion of SSMs to assign to each cluster
                     rd_nssm = np.random.dirichlet([c_nssm,c_nssm,c_nssm]) * sum(t_nssms)
-                    rd_nssm = map(round,rd_nssm)
+                    rd_nssm = list(map(round,rd_nssm))
                     remainder = sum(t_nssms) - sum(rd_nssm)
                     # Randomly assign remainder
                     rd_nssm[np.random.randint(0,len(rd_nssm))] += remainder
-                    rd_nssm = map(int,rd_nssm)
+                    rd_nssm = list(map(int,rd_nssm))
                 else:
                     rd_nssm = t_nssms
 
@@ -116,10 +116,10 @@ def scoring1C_behavior(method='abs'):
                     phis  = t_phis
 
 
-                temp.append(calculate1C(zip(rd_nssm,phis), t_entry, method))
+                temp.append(calculate1C(list(zip(rd_nssm,phis)), t_entry, method))
             res_row.append(np.mean(temp))
         res.append(res_row)
-    res = [map(str,x) for x in res]
+    res = [list(map(str,x)) for x in res]
     res = [res[0]] + [['beta_err_conc_phi=' + str(concentration[i])] + res[i+1] for i in range(len(concentration))]
     res = ['\t'.join(x) for x in res]
 
@@ -131,23 +131,23 @@ def scoring1C_behavior(method='abs'):
     # Collapse first two clusters
     phis = [(.85+.5)/2.0, .3]
     nssms = [400,200]
-    entry = zip(nssms,phis)
+    entry = list(zip(nssms,phis))
     res.append(["Collapse12", calculate1C(entry, t_entry, method)])
     # Collapse last two clusters
     phis = [.85, (.5+.3)/2.0]
     nssms = [200,400]
-    entry = zip(nssms,phis)
+    entry = list(zip(nssms,phis))
     res.append(["Collapse23", calculate1C(entry, t_entry, method)])
     # Collapse all clusters
     phis = [.55]
     nssms=[600]
-    entry = zip(nssms,phis)
+    entry = list(zip(nssms,phis))
     res.append(["Collapse123", calculate1C(entry, t_entry, method)])
 
     # Assume all SSMs are clonal
     phis = [.85]
     nssms=[600]
-    entry = zip(nssms,phis)
+    entry = list(zip(nssms,phis))
     res.append(["All_Clonal", calculate1C(entry, t_entry, method)])
 
     # For splits, phis were calculated as +/- 0.05 from center.  
@@ -161,21 +161,21 @@ def scoring1C_behavior(method='abs'):
     # Split cluster 1
     phis = [.9,.8, .5, .3]
     nssms = [100,100,200,200]
-    entry = zip(nssms,phis)
+    entry = list(zip(nssms,phis))
     res.append(["Split1", calculate1C(entry, t_entry, method)])
 
     # Split cluster 2
     phis = [.85, .55,.45, .3]
     nssms = [200,100,100,200]
-    entry = zip(nssms,phis)
+    entry = list(zip(nssms,phis))
     res.append(["Split2", calculate1C(entry, t_entry, method)])
     # Split cluster 3
     phis = [.85, .5,.35,.25]
     nssms = [200,200,100,100]
-    entry = zip(nssms,phis)
+    entry = list(zip(nssms,phis))
     res.append(["Split3", calculate1C(entry, t_entry, method)])
     
-    res = [map(str,x) for x in res]
+    res = [list(map(str,x)) for x in res]
     res = ['\t'.join(x) for x in res]
     f = open(tsv_dir + 'scoring1C_cases_' + method + '.tsv', 'w')
     f.write('\n'.join(res))
@@ -186,18 +186,18 @@ def rand_size_clusters(n_clusters,n_ssm, safe= True):
     p_clusters = np.zeros(n_clusters)
     if safe == False:
         while (np.sum(p_clusters)==0 or np.sum(p_clusters/np.sum(p_clusters))>1 ):
-            p_clusters = map(lambda x: np.random.normal(loc=10, scale=2), range(n_clusters))
+            p_clusters = [np.random.normal(loc=10, scale=2) for x in range(n_clusters)]
         size_clusters = np.random.multinomial(n_ssm, p_clusters/np.sum(p_clusters))
     else:
         while (np.sum(p_clusters)==0 or np.sum(p_clusters/np.sum(p_clusters))>1  or np.any(size_clusters == 0)):
-            p_clusters = map(lambda x: np.random.normal(loc=10, scale=2), range(n_clusters))
+            p_clusters = [np.random.normal(loc=10, scale=2) for x in range(n_clusters)]
             size_clusters = np.random.multinomial(n_ssm, p_clusters/np.sum(p_clusters))
     
     return(size_clusters)    
 
 def set_prop_merged_split(prop,scenario,n_ssm,n_clusters):
  #   pdb.set_trace()
-    print("scenario: ", scenario)
+    print(("scenario: ", scenario))
 
     if (scenario=='MergeClusterMid&BotOneChild'):
         merged_ssm = int(prop*n_ssm)
@@ -245,7 +245,7 @@ def make_permuted_trees(tree_func, prefix):
     prefix =  prefix + str(len(clusters)) + "clust"
     tree_dict_i = dict()
     i = 0
-    for key in tree_dict.keys():
+    for key in list(tree_dict.keys()):
         tree_dict_i[prefix + "_" + str(i)] = tree_dict[key]
         i += 1
     return tree_dict_i
@@ -288,17 +288,17 @@ def score_permutations(new=True, methods= ['js_divergence','pearson','mcc','aupr
     # out = np.zeros((1,1))
     for i_tree in range(len(tree_dict_list)):
         tree_dict = tree_dict_list[i_tree]
-        print tree_dict
-        print len(tree_dict[tree_dict.keys()[0]].shape) 
-        if len(tree_dict[tree_dict.keys()[0]].shape) > 1:
-            clusters = np.arange(len(tree_dict.values()[0]))+1
+        print(tree_dict)
+        print(len(tree_dict[list(tree_dict.keys())[0]].shape)) 
+        if len(tree_dict[list(tree_dict.keys())[0]].shape) > 1:
+            clusters = np.arange(len(list(tree_dict.values())[0]))+1
             mistakes = scenarios
         else:
             clusters = np.asarray([1])
             mistakes = ['Truth','split_bottom','extra_bottom']
-        print clusters
-        for key in tree_dict.keys():
-            print tree_dict[key].shape
+        print(clusters)
+        for key in list(tree_dict.keys()):
+            print(tree_dict[key].shape)
             if len(tree_dict[key].shape) > 1:
                 parents = tree_dict[key][:,0]
                 sizes = tree_dict[key][:,1]
@@ -307,9 +307,9 @@ def score_permutations(new=True, methods= ['js_divergence','pearson','mcc','aupr
                 sizes = np.asarray([tree_dict[key][1]])
             tree_df = np.vstack((clusters,parents))
             tree_df = np.transpose(tree_df)
-            print tree_df
+            print(tree_df)
             tree = tree_from_df(tree_df, sizes=sizes)
-            print tree.out_1C()
+            print(tree.out_1C())
             tree.tree_struct()
             t_ccm = tree.ccm()
             t_ad = tree.ad()
@@ -322,8 +322,8 @@ def score_permutations(new=True, methods= ['js_divergence','pearson','mcc','aupr
                 ccm = mistake_tree.ccm()
                 ad = mistake_tree.ad()
                 p_1C = mistake_tree.out_1C()
-                print scenario
-                print "shpe",ccm.shape
+                print(scenario)
+                print("shpe",ccm.shape)
                 ccm_B = copy.deepcopy(ccm)
                 ad_B = copy.deepcopy(ad)
                 ccm_B = m_cont(t_ccm, ccm_B)
@@ -336,14 +336,14 @@ def score_permutations(new=True, methods= ['js_divergence','pearson','mcc','aupr
 
                 score_cF = clonalFractionSim(p_1C,t_1C)
 
-                score2A = map(lambda x: 0 if np.isnan(x) else x , score2A)
-                score2B = map(lambda x: 0 if np.isnan(x) or np.isinf(x) else x , score2A)
-                score3A = map(lambda x: 0 if np.isnan(x) else x , score3A)
+                score2A = [0 if np.isnan(x) else x for x in score2A]
+                score2B = [0 if np.isnan(x) or np.isinf(x) else x for x in score2A]
+                score3A = [0 if np.isnan(x) else x for x in score3A]
 
-                print '3A',score3A
-                print '2A',score2A
-                print '3B',score3B
-                print '2B',score2B
+                print('3A',score3A)
+                print('2A',score2A)
+                print('3B',score3B)
+                print('2B',score2B)
                 out = out.append({'tree': key, 'mistake':scenario,'sc':'3A','js_divergence':score3A[0], 'pearson':score3A[1], 'mcc':score3A[2], 'aupr':score3A[3]},ignore_index=True)
                 out = out.append({'tree': key, 'mistake':scenario,'sc':'2A','js_divergence':score2A[0], 'pearson':score2A[1], 'mcc':score2A[2], 'aupr':score3A[3]},ignore_index=True)
                 out = out.append({'tree': key, 'mistake':scenario,'sc':'3B','js_divergence':score3B[0], 'pearson':score3B[1], 'mcc':score3B[2], 'aupr':score3B[3]},ignore_index=True)
@@ -424,7 +424,7 @@ def scoring2A_behavior_var(methods='js_divergence', scenarios = ["SplitClusterBo
                        
             score =  [calculate2(ccm, t_ccm, method=method) for method in methods]
            # score =  [calculate2_js_divergence(ccm, t_ccm), calculate2(ccm, t_ccm, method='js_divergence'), calculate2_mcc(ccm, t_ccm), calculate2(ccm, t_ccm, method='mcc'), calculate2_aupr(ccm, t_ccm), calculate2(ccm, t_ccm, method='aupr')]#[calculate2(ccm, t_ccm, method=method) for method in methods]
-            score = map(lambda x: 0 if np.isnan(x) else x , score)
+            score = [0 if np.isnan(x) else x for x in score]
            # out = np.array((sc,i,score),dtype=np.dtype([('sc','S40'),('rep','int'),('scores', str(6)+'float32')]))
             out = np.array((sc,i,score),dtype=np.dtype([('sc','S40'),('rep','int'),('scores', str(len(methods))+'float32')]))
             res.append(out)
@@ -435,7 +435,7 @@ def scoring2A_behavior_var(methods='js_divergence', scenarios = ["SplitClusterBo
 def write_ccm(size_clusters=4, n_clusters=3, scenario='SplitClusterBot',outtrue="true_ccm.txt", outpred="pred_ccm.txt"):
     true_ccm = get_ccm('Truth', size_clusters= size_clusters, n_clusters=n_clusters)
     pred_ccm = get_ccm(scenario, size_clusters= size_clusters, n_clusters=n_clusters)
-    print(true_ccm[0].shape)
+    print((true_ccm[0].shape))
     np.savetxt(outtrue, true_ccm[0],fmt='%i')
     np.savetxt(outpred, pred_ccm,fmt='%i')
         
@@ -452,7 +452,7 @@ def scoring2A_behavior(tst_big_mat=False, tst_rand_reassign=False, tst_closest_r
     # Test the scoring behavior when the predicted CCM comes from one of the presepeficied 'mistake scenarios'
     # i.e. mistakes in the co-clustering assignment that we expect people to make
     if verbose:
-        print('Testing scoring for SC2 using the ' + method + ' scoring metric:')
+        print(('Testing scoring for SC2 using the ' + method + ' scoring metric:'))
         print('Scoring behavior for mistake scenarios with 3 clusters...')
     #size_clusters = 200 # true size of each cluster
     #n_clusters = 3 # true number of clusters
@@ -472,14 +472,14 @@ def scoring2A_behavior(tst_big_mat=False, tst_rand_reassign=False, tst_closest_r
     res = []
     for sc in scenarios:
         # calculate the CCM
-        print("sc",sc)
+        print(("sc",sc))
         ccm = get_ccm(sc ,t_ccm=t_ccm, t_clusters=t_clusters, size_clusters=size_clusters, n_clusters=n_clusters, big_extra_num=big_extra_num)
         # calculate the score for the given scenario
         res.append([sc ,calculate2(ccm, t_ccm, method=method)])
         # res.append([sc ,calculate2(ccm, t_ccm, method=method)])
     if write == False:
     	return res
-    res = [map(str,x) for x in res]
+    res = [list(map(str,x)) for x in res]
     res = ['\t'.join(x) for x in res]
     
     f = open(tsv_dir + 'scoring2A_cases_' + method + '.tsv', 'w')
@@ -492,7 +492,7 @@ def scoring2A_behavior(tst_big_mat=False, tst_rand_reassign=False, tst_closest_r
         n_clusters = 10 # true number of clusters
         big_extra_num = 10
         if verbose:
-            print('Scoring behavior for mistake scenarios with ' + str(n_clusters) + ' clusters...')
+            print(('Scoring behavior for mistake scenarios with ' + str(n_clusters) + ' clusters...'))
 
         t_ccm, t_clusters = get_ccm('Truth',size_clusters=size_clusters, n_clusters=n_clusters, big_extra_num=big_extra_num)
 
@@ -506,7 +506,7 @@ def scoring2A_behavior(tst_big_mat=False, tst_rand_reassign=False, tst_closest_r
             res_more_cl.append([sc ,calculate2(ccm, t_ccm, method=method)])
             # res_more_cl.append([sc ,calculate2(ccm, t_ccm, method=method)])
 
-        res_more_cl = [map(str,x) for x in res_more_cl]
+        res_more_cl = [list(map(str,x)) for x in res_more_cl]
         res_more_cl = ['\t'.join(x) for x in res_more_cl]
         f = open(tsv_dir + 'scoring2A_big_cases_' + method + '.tsv', 'w')
         f.write('\n'.join(res_more_cl))
@@ -535,10 +535,10 @@ def scoring2A_behavior(tst_big_mat=False, tst_rand_reassign=False, tst_closest_r
 
         for p_err in p_errors:
             if verbose:
-                print('     Using a probability of reassignment of ' + str(p_err) + ':')
+                print(('     Using a probability of reassignment of ' + str(p_err) + ':'))
             for i in range(n_iter):
                 if verbose:
-                    print('          Iteration ' + str(i+1) + ' of ' + str(n_iter) + '...')
+                    print(('          Iteration ' + str(i+1) + ' of ' + str(n_iter) + '...'))
 
                 clusters = {}
                 if tst_rand_reassign:
@@ -583,13 +583,13 @@ def scoring2A_behavior(tst_big_mat=False, tst_rand_reassign=False, tst_closest_r
 
         # Output the results
         if tst_rand_reassign:
-            res['rand'] = [map(str,x) for x in res['rand']]
+            res['rand'] = [list(map(str,x)) for x in res['rand']]
             res['rand'] = ['\t'.join(x) for x in res['rand']]
             f = open(tsv_dir + 'scoring2A_random_reassignment_' + method + '.tsv', 'w')
             f.write('\n'.join(res['rand']))
             f.close()
         if tst_closest_reassign:
-            res['closest'] = [map(str,x) for x in res['closest']]
+            res['closest'] = [list(map(str,x)) for x in res['closest']]
             res['closest'] = ['\t'.join(x) for x in res['closest']]
             f = open(tsv_dir + 'scoring2A_closest_reassignment_' + method + '.tsv', 'w')
             f.write('\n'.join(res['closest']))
@@ -600,7 +600,7 @@ def scoring2A_behavior(tst_big_mat=False, tst_rand_reassign=False, tst_closest_r
 def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True, method='pseudoV', verbose=True):
     if tst_betas:
         if verbose:
-            print 'Testing adding beta error to the true CCM:'
+            print('Testing adding beta error to the true CCM:')
         t_ccm, t_clusters = get_ccm('Truth',size_clusters=200, n_clusters=3, big_extra_num=33)
 
         n_uniq = len(np.triu_indices(t_ccm.shape[0],k=1)[0])
@@ -610,10 +610,10 @@ def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True,
 
         for c in concentrations:
             if verbose:
-                print ('       Beta Error with concentration param = ' + str(c) + '...')
+                print(('       Beta Error with concentration param = ' + str(c) + '...'))
             for i in range(n_iter):
                 if verbose:
-                    print('           Iteration ' + str(i+1) + ' of ' + str(n_iter) + '...')
+                    print(('           Iteration ' + str(i+1) + ' of ' + str(n_iter) + '...'))
 
                 ccm = np.copy(t_ccm)
                 ccm[np.triu_indices(t_ccm.shape[0],k=1)] -= np.random.beta(1,c,n_uniq) # subtract beta error from the upper triangular part of the true CCM
@@ -622,7 +622,7 @@ def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True,
                 np.fill_diagonal(ccm,1) # ensure the matrix has 1's along the diagonal
                 ccm = np.abs(ccm) # ensure the matrix has values between 0 and 1
                 res.append([c,calculate2(ccm,t_ccm, method=method)])
-        res = [map(str,x) for x in res]
+        res = [list(map(str,x)) for x in res]
         res = ['\t'.join(x) for x in res]
         f = open(tsv_dir + 'scoring2B_beta_' + method + '.tsv', 'w')
         f.write('\n'.join(res))
@@ -641,12 +641,12 @@ def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True,
             error_data = {}
         for sc in TwoBscenarios:
             if verbose:
-                print('  Scenario: ' + sc)
+                print(('  Scenario: ' + sc))
             ccm = get_ccm(sc,t_ccm=t_ccm, t_clusters=t_clusters, size_clusters=size_clusters, n_clusters=n_clusters, big_extra_num=big_extra_num)
             ccm_ones = (ccm == 1)
             ccms = [ccm]
             if verbose:
-                print '       Calculating SC2 score with certainty of 1...'
+                print('       Calculating SC2 score with certainty of 1...')
             data = [calculate2(ccm, t_ccm, method=method)]
 
             diag = np.diag_indices(ccm.shape[0])
@@ -669,7 +669,7 @@ def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True,
 
                     ccms_err = [ccm_err]
                     if verbose:
-                        print '       Calculating SC2 score with certainty of 1 with Errors using std dev of ' + str(std) + '...'
+                        print('       Calculating SC2 score with certainty of 1 with Errors using std dev of ' + str(std) + '...')
                     data_err[std] = [calculate2(ccm_err, t_ccm, method=method)]
 
             probs = [0.95,0.9,0.85,0.8,0.75,0.7]
@@ -680,7 +680,7 @@ def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True,
                 ccms.append(ccm_prob)
 
                 if verbose:
-                    print '       Calculating SC2 score with certainty of ' + str(prob) + '...'
+                    print('       Calculating SC2 score with certainty of ' + str(prob) + '...')
                 data.append(calculate2(ccm_prob, t_ccm, method=method))
 
                 if tst_prob_mod_err:
@@ -692,7 +692,7 @@ def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True,
 
                         ccms_err.append(ccm_prob_err)
                         if verbose:
-                            print '       Calculating SC2 score with certainty of ' + str(prob) + ' with Errors using std dev of ' + str(std) + '...'
+                            print('       Calculating SC2 score with certainty of ' + str(prob) + ' with Errors using std dev of ' + str(std) + '...')
                         data_err[std].append(calculate2(ccm_prob_err, t_ccm, method=method))
 
             scoring_data[sc] = data
@@ -702,7 +702,7 @@ def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True,
         with open(tsv_dir + '2B_prob_scoring_' + method + '.tsv', 'w') as f:
             writer = csv.writer(f)
             writer.writerow(['Scenario', 1]+probs)
-            for key, val in scoring_data.iteritems():
+            for key, val in scoring_data.items():
                 writer.writerow([key] + val)
 
         if tst_prob_mod_err:
@@ -710,7 +710,7 @@ def scoring2B_behavior(tst_betas=True, tst_prob_mod=True, tst_prob_mod_err=True,
                 with open(tsv_dir + '2B_prob_scoring_with_err_' + str(std) + '_' + method + '.tsv', 'w') as f:
                     writer = csv.writer(f)
                     writer.writerow(['Scenario', 1]+probs)
-                    for key, val in error_data.iteritems():
+                    for key, val in error_data.items():
                         writer.writerow([key] + val[std])
 
 def collapse_clusters_2A(clusters):
@@ -737,7 +737,7 @@ def scoring3A_behavior_var(methods='js_divergence', in_scenarios = None, verbose
         scenario_set = scenarios
     else:
         scenario_set = in_scenarios
-    print'For scenarios', scenario_set
+    print('For scenarios', scenario_set)
     res3A = []
     res2A = []
     f = open(tsv_dir + 'scoring3A_cases_params'+ '_nc'+ str(n_clusters) +'_rep' + str(rep) +'_s'+ str(n_ssm) + '_bep'+str(in_big_extra_prop)+'_sep'+str(in_small_extra_prop)+ '.tsv', 'w')
@@ -780,7 +780,7 @@ def scoring3A_behavior_var(methods='js_divergence', in_scenarios = None, verbose
     res3A = outres[outres['chal']=='3A']      
     res2A = outres[outres['chal']=='2A']
     #pool.close()
-    print outres     
+    print(outres)     
     # res3A = np.array(res3A)
     # res2A = np.array(res2A) 
     # # print(res3A)
@@ -806,14 +806,14 @@ def score_sc(t_ccm, t_ad, t_clusters, sc, methods, size_clusters, n_ssm, i, in_s
         if (continuous == True):
             ccm = m_cont(t_ccm, ccm)      
             ad = ad_cont(t_ad, ad,ccm)
-        print np.round(ccm,2)
+        print(np.round(ccm,2))
         score3A =  [calculate3Final(ccm, ad, t_ccm, t_ad, method=method)[3] for method in methods]
-        score3A = map(lambda x: 0 if np.isnan(x) else x , score3A)
+        score3A = [0 if np.isnan(x) else x for x in score3A]
 
         #make into the 2A output
         t_2A = collapse_clusters_2A(t_clusters)
         p_2A = collapse_clusters_2A(clusters)
-        muts = range(n_ssm)
+        muts = list(range(n_ssm))
         score2A=[]
         if continuous == True:
             score2A = [calculate2(ccm, t_ccm,  method=method) for method in methods]
@@ -823,7 +823,7 @@ def score_sc(t_ccm, t_ad, t_clusters, sc, methods, size_clusters, n_ssm, i, in_s
             tpout.append(vout)
             tpout.append(raw)
             score2A =  [om_calculate2A(*tpout, method=method, add_pseudo=True, pseudo_counts=None, rnd=1e-50) for method in methods]
-        score2A = map(lambda x: 0 if np.isnan(x) else x , score2A)
+        score2A = [0 if np.isnan(x) else x for x in score2A]
 
         out3A = np.array((sc_orig,i,'3A',score3A),dtype=np.dtype([('sc','S40'),('rep','int'),('chal','S40'),('scores', str(len(methods))+'float32')]))
         out2A = np.array((sc_orig,i,'2A',score2A),dtype=np.dtype([('sc','S40'),('rep','int'),('chal','S40'),('scores', str(len(methods))+'float32')]))
@@ -871,7 +871,7 @@ def scoring3A_behavior(method="orig", verbose=False, weights=None, save=True, pc
 
     for scenario in scenarios:
         if verbose:
-            print '\nScenario %s' % scenario
+            print('\nScenario %s' % scenario)
 
         if scenario == 'Truth':
             res.append(['Truth',
@@ -894,7 +894,7 @@ def scoring3A_behavior(method="orig", verbose=False, weights=None, save=True, pc
             f = open(tsv_dir + 'scoring3A_all_cases_' + '_'.join([m + in_mat_ext for m in method]) + pc_ext + tri_ext + '.tsv', 'w')
         else:
             f = open(tsv_dir + 'scoring3A_all_cases_' + method + in_mat_ext +  pc_ext + tri_ext + '.tsv', 'w')
-        out_res = [map(str,x) for x in res]
+        out_res = [list(map(str,x)) for x in res]
         out_res = ['\t'.join(x) for x in out_res]
         f.write('\n'.join(out_res))
         f.close()
@@ -934,25 +934,25 @@ def scoring_weight_behavior(sc="2A", methods=["js_divergence", "pearson", "mcc"]
     if sc == '3A':
 	    if res is None:
 	        res = np.transpose(np.asarray([[row[1] for row in scoring3A_behavior(method, verbose=verbose,write=False)] for method in methods]))
-	    print res
+	    print(res)
 	   
     # True values for each attribute
     if sc == '2A':
         if res is None:
             res = np.transpose(np.asarray([[row[1] for row in scoring2A_behavior(method=method, verbose=verbose,write=False)] for method in methods]))
-        print res
+        print(res)
         scenarios = ["OneCluster", "NClusterOneLineage", "NClusterTwoLineages", "NClusterCorrectLineage", "ParentIsNieceWithChildren", "ParentIsSiblingWithChildren", "ParentIsCousin","ParentIsAunt", "ParentIsGrandparent", "ParentIsSibling", "BigExtraTop", "BigExtraMid", "BigExtraCurBot", "BigExtraNewBot", "SmallExtraTop", "SmallExtraMid", "SmallExtraNewBot", 'SmallExtraCurBot', "SplitClusterMidMultiChild", "SplitClusterMidOneChild", "SplitClusterBotSame", "SplitClusterBotDiff", "MergeClusterTop&Mid", "MergeClusterMid&BotMultiChild", "MergeClusterMid&BotOneChild","MergeClusterBot"] 
    
     wght_res = {'Case':scenarios}
     n_method = len(methods)
     weights = [0,0.5,1]
     weight_list = get_weights(n_method, weights)
-    print weight_list
+    print(weight_list)
     for wght in weight_list:
-        print("weight",wght)
+        print(("weight",wght))
         norm_wght = wght / float(sum(wght))
         scores = np.sum(norm_wght * res, 1)
-        print("scores",scores)
+        print(("scores",scores))
         if set(wght) == {0,weights[-1]} or set(wght) == {weights[-1]}:
             key = '+'.join([methods[i] for i in range(n_method) if wght[i] == weights[-1]])
             wght_res[key] = scores
@@ -968,7 +968,7 @@ def scoring_weight_behavior(sc="2A", methods=["js_divergence", "pearson", "mcc"]
 
     with open(tsv_dir + 'weights'+sc+'_all_cases_' + '_'.join([m + in_mat_ext for m in methods]) + '.tsv', 'wb') as f:
         fields = sorted(wght_res.keys())
-        print fields
+        print(fields)
         w = csv.DictWriter(f, delimiter='\t', fieldnames=fields)
         w.writeheader()
         for i in range(len(scenarios)):
@@ -989,7 +989,7 @@ def scoring_weight_behavior_var(sc="2A", methods=["js_divergence", "pearson", "m
             out = scoring3A_behavior_var(methods=methods, verbose=verbose,write=False,n_clusters=n_clusters,n_ssm=n_ssm,in_big_extra_prop=big_extra_prop, in_small_extra_prop=small_extra_prop)
             scenarios = out['sc']
             res = out['scores']
-        print res
+        print(res)
 # True values for each attribute
     if sc == '2A':
         if res is None:
@@ -997,14 +997,14 @@ def scoring_weight_behavior_var(sc="2A", methods=["js_divergence", "pearson", "m
             scenarios = out['sc']
             res = out['scores']
          #   res = np.transpose(np.asarray([[row[:,1:2] for row in scoring2A_behavior_var(method=method, verbose=verbose,write=False)] for method in methods]))
-        print "res",res
+        print("res",res)
      #   print(res.shape)
      #   print "scenarios", scenarios
     wght_res = {'Case':scenarios}
     n_method = len(methods)
     weights = [0,0.5,1]
     weight_list = get_weights(n_method, weights)
-    print weight_list
+    print(weight_list)
     for wght in weight_list:
      #   print("weight",wght)
         norm_wght = wght / float(sum(wght))
@@ -1018,7 +1018,7 @@ def scoring_weight_behavior_var(sc="2A", methods=["js_divergence", "pearson", "m
   
     with open(tsv_dir + 'weights'+sc+'_all_cases_' + '_'.join([m  for m in methods]) + '_nc'+ str(n_clusters) +'_s'+ str(n_ssm) + '_bep'+str(big_extra_prop)+'_sep'+str(small_extra_prop)+ '.tsv', 'wb') as f:
         fields = sorted(wght_res.keys())
-        print fields
+        print(fields)
         w = csv.DictWriter(f, delimiter='\t', fieldnames=fields)
         w.writeheader()
         for i in range(len(scenarios)):
@@ -1036,7 +1036,7 @@ def format_to_print(res):
 def run_2A_3A(methods='js_divergence', verbose=False,n_ssm=600,n_clusters=6,in_big_extra_prop=0.1,in_small_extra_prop=0.025,write=True,rep=100,in_prop_split=0.5, set_prop = None, rand = False, continuous = True):
     
     out2A , out3A = scoring3A_behavior_var(methods=methods, rep=rep, n_ssm=n_ssm, in_small_extra_prop=in_small_extra_prop, in_big_extra_prop=in_big_extra_prop, write = write, in_prop_split=in_prop_split, set_prop=set_prop, rand=rand,continuous=continuous)
-    out2A, out3A = map(format_to_print, [out2A,out3A])
+    out2A, out3A = list(map(format_to_print, [out2A,out3A]))
     chal = ''
     if continuous== True:
         chal = 'B'
@@ -1047,7 +1047,7 @@ def run_2A_3A(methods='js_divergence', verbose=False,n_ssm=600,n_clusters=6,in_b
     if rand == True:
         name2A = name2A + '_rand'
         name3A = name3A + '_rand'
-    print name2A
+    print(name2A)
     name2A = name2A + '.txt'
     name3A = name3A + '.txt'
 
@@ -1079,7 +1079,7 @@ def behaviour_2A_extra(n_ssm = 1000 ,methods = ["js_divergence", "pearson", "mcc
 
 def behaviour_2A_merged(n_ssm=1000,  methods = ["js_divergence", "pearson", "mcc"], scenario=['MergeClusterMid&BotOneChild'] ):
     out_prop_scores = np.ones((1,1))
-    print(out_prop_scores.shape)
+    print((out_prop_scores.shape))
     for n in [6]:
         prop_merged = 0.01
         while prop_merged < 0.61:
@@ -1103,7 +1103,7 @@ def behaviour_2A_merged(n_ssm=1000,  methods = ["js_divergence", "pearson", "mcc
 
 def behaviour_2A_split(n_ssm=1000,  methods = ["js_divergence", "pearson", "mcc"], scenario=['SplitClusterBot'] ):
     out_prop_scores = np.ones((1,1))
-    print(out_prop_scores.shape)
+    print((out_prop_scores.shape))
     for n in [6]:
         #prop_split = 0.18
        # while prop_split < 0.51:
@@ -1131,12 +1131,12 @@ def behaviour_2A_split(n_ssm=1000,  methods = ["js_divergence", "pearson", "mcc"
 
 def behaviour_2A_nssm(n_ssm=300, nssm_max=600, step=300, methods = ["js_divergence", "pearson", "mcc"], scenario=['SplitClusterBot'] ):
     out_prop_scores = np.ones((1,1))
-    print(out_prop_scores.shape)
+    print((out_prop_scores.shape))
     for n in [6]:
         prop_split = 0.15
        # while prop_split < 0.51:
         while n_ssm < nssm_max:
-            print("prop_split", prop_split)
+            print(("prop_split", prop_split))
                     
             out2A = scoring2A_behavior_var(methods=methods, scenarios=['Truth'], rep=20, verbose=True,write=False,n_clusters=n,n_ssm=n_ssm, in_small_extra_prop=0.10,p_err=0.1,nvar=False)
         #    print(out3A)
@@ -1208,7 +1208,7 @@ def overall_score(p_cell, t_cell, p_ncluster, t_ncluster, p_1c, t_1c,  p_ccm, t_
 
     scores.append(soverall)
     if verbose:
-        print('Scores:\nSC1 - Part A: %s, Part B: %s, Part C: %s\nSC2 - %s\nSC3 - %s\nOverall: %s' % tuple(scores))
+        print(('Scores:\nSC1 - Part A: %s, Part B: %s, Part C: %s\nSC2 - %s\nSC3 - %s\nOverall: %s' % tuple(scores)))
 
     return soverall
 
@@ -1240,7 +1240,7 @@ def score_all(l_p_cell, t_cell,
     scores = dict()
     for i in range(len(l_p_cell)):
         if verbose:
-            print 'Scenario: %s' % scenarios[i]
+            print('Scenario: %s' % scenarios[i])
         score = overall_score(
             l_p_cell[i], t_cell,
               l_p_ncluster[i], t_ncluster,
@@ -1253,7 +1253,7 @@ def score_all(l_p_cell, t_cell,
 
     if verbose:
         print ("Overall Scores")
-        print scores
+        print(scores)
 
     return scores
 
@@ -1422,12 +1422,12 @@ def get_ad(scenario, t_ad=None, size_clusters=100, nssms=None):
         return ad
     elif scenario is "ParentIsSiblingWithChildren":
         ad = np.copy(t_ad)
-        ad[2*size_clusters:3*size_clusters, range(size_clusters,2*size_clusters)+range(3*size_clusters,5*size_clusters)] = 1 #adjust cluster 3's ancestry
+        ad[2*size_clusters:3*size_clusters, list(range(size_clusters,2*size_clusters))+list(range(3*size_clusters,5*size_clusters))] = 1 #adjust cluster 3's ancestry
         return ad
     elif scenario is "ParentIsNieceWithChildren":
         ad = np.copy(t_ad)
-        ad[2*size_clusters:3*size_clusters, range(size_clusters,2*size_clusters)+range(3*size_clusters,5*size_clusters)] = 1 #adjust cluster 3's ancestry
-        ad[5*size_clusters:6*size_clusters, range(size_clusters,2*size_clusters)+range(3*size_clusters,5*size_clusters)] = 1 #adjust cluster 6's ancestry
+        ad[2*size_clusters:3*size_clusters, list(range(size_clusters,2*size_clusters))+list(range(3*size_clusters,5*size_clusters))] = 1 #adjust cluster 3's ancestry
+        ad[5*size_clusters:6*size_clusters, list(range(size_clusters,2*size_clusters))+list(range(3*size_clusters,5*size_clusters))] = 1 #adjust cluster 6's ancestry
         return ad
     elif scenario is "OneCluster":
         if nssms is None:
@@ -1438,8 +1438,8 @@ def get_ad(scenario, t_ad=None, size_clusters=100, nssms=None):
         #if nssms is None:
         #    return np.triu(np.ones(t_ad.shape))
         ad = np.ones(t_ad.shape, dtype=np.int8)
-        for i in xrange(t_ad.shape[0]):
-            for j in xrange(i + 1):
+        for i in range(t_ad.shape[0]):
+            for j in range(i + 1):
                 ad[i, j] = 0
         return ad
     elif scenario is "NClusterTwoLineages":
@@ -1448,7 +1448,7 @@ def get_ad(scenario, t_ad=None, size_clusters=100, nssms=None):
         return ad
     elif scenario is "NClusterCorrectLineage":
         ad = np.triu(np.ones(t_ad.shape), k=1)
-        ad[size_clusters:2*size_clusters,range(2*size_clusters,3*size_clusters)+range(5*size_clusters,6*size_clusters)] = 0 # equivalent of cluster 2 from true AD matrix
+        ad[size_clusters:2*size_clusters,list(range(2*size_clusters,3*size_clusters))+list(range(5*size_clusters,6*size_clusters))] = 0 # equivalent of cluster 2 from true AD matrix
         ad[2*size_clusters:3*size_clusters,3*size_clusters:5*size_clusters] = 0 # cluster 3 from true AD matrix
         ad[3*size_clusters:4*size_clusters,4*size_clusters:] = 0 # cluster 4 from true AD matrix
         ad[4*size_clusters:5*size_clusters,5*size_clusters:6*size_clusters] = 0 # cluster 5 from true AD matrix
@@ -1457,21 +1457,21 @@ def get_ad(scenario, t_ad=None, size_clusters=100, nssms=None):
         ad = np.copy(t_ad)
         for i in range(0,6):
             ad[:,size_clusters*i] = 0
-            ad[range(1,size_clusters)+range(size_clusters+1,2*size_clusters)+range(3*size_clusters+1,4*size_clusters),size_clusters*i] = 1
+            ad[list(range(1,size_clusters))+list(range(size_clusters+1,2*size_clusters))+list(range(3*size_clusters+1,4*size_clusters)),size_clusters*i] = 1
             ad[size_clusters*i,:] = 0
         return ad
     elif scenario is "SmallExtraCurBot":
         ad = np.copy(t_ad)
         for i in range(0,6):
             ad[:,size_clusters*i] = 0
-            ad[range(1,size_clusters)+range(2*size_clusters+1,3*size_clusters),size_clusters*i] = 1
+            ad[list(range(1,size_clusters))+list(range(2*size_clusters+1,3*size_clusters)),size_clusters*i] = 1
             ad[size_clusters*i,:] = 0
         return ad
     elif scenario is "SmallExtraMid":
         ad = np.copy(t_ad)
         for i in range(0,6):
             ad[:,size_clusters*i] = 0
-            ad[range(1,size_clusters),size_clusters*i] = 1
+            ad[list(range(1,size_clusters)),size_clusters*i] = 1
             ad[size_clusters*i,:] = 0
         return ad
     elif scenario is "SmallExtraTop":
@@ -1479,18 +1479,18 @@ def get_ad(scenario, t_ad=None, size_clusters=100, nssms=None):
         for i in range(0,6):
             ad[:,size_clusters*i] = 0
             ad[size_clusters*i,
-               range(1,size_clusters)+
-               range(size_clusters+1,2*size_clusters)+
-               range(2*size_clusters+1,3*size_clusters)+
-               range(3*size_clusters+1,4*size_clusters)+range(4*size_clusters+1,5*size_clusters)+range(5*size_clusters+1,6*size_clusters)] = 1
+               list(range(1,size_clusters))+
+               list(range(size_clusters+1,2*size_clusters))+
+               list(range(2*size_clusters+1,3*size_clusters))+
+               list(range(3*size_clusters+1,4*size_clusters))+list(range(4*size_clusters+1,5*size_clusters))+list(range(5*size_clusters+1,6*size_clusters))] = 1
         return ad
     elif scenario is "BigExtraNewBot":
         ad = np.copy(t_ad)
         for i in range(0,6):
             ad[:,size_clusters*i:size_clusters*i+15] = 0
-            ad[range(15,size_clusters)+
-               range(size_clusters+15,2*size_clusters)+
-               range(3*size_clusters+15,4*size_clusters),
+            ad[list(range(15,size_clusters))+
+               list(range(size_clusters+15,2*size_clusters))+
+               list(range(3*size_clusters+15,4*size_clusters)),
             size_clusters*i:size_clusters*i+15] = 1
             ad[size_clusters*i:size_clusters*i+15,:] = 0
         return ad
@@ -1498,14 +1498,14 @@ def get_ad(scenario, t_ad=None, size_clusters=100, nssms=None):
         ad = np.copy(t_ad)
         for i in range(0,6):
             ad[:,size_clusters*i:size_clusters*i+15] = 0
-            ad[range(15,size_clusters)+range(2*size_clusters+15,3*size_clusters),size_clusters*i:size_clusters*i+15] = 1
+            ad[list(range(15,size_clusters))+list(range(2*size_clusters+15,3*size_clusters)),size_clusters*i:size_clusters*i+15] = 1
             ad[size_clusters*i:size_clusters*i+15,:] = 0
         return ad
     elif scenario is "BigExtraMid":
         ad = np.copy(t_ad)
         for i in range(0,6):
             ad[:,size_clusters*i:size_clusters*i+15] = 0
-            ad[range(15,size_clusters),(size_clusters*i):(size_clusters*i+15)] = 1
+            ad[list(range(15,size_clusters)),(size_clusters*i):(size_clusters*i+15)] = 1
             ad[size_clusters*i:size_clusters*i+15,:] = 0
         return ad
     elif scenario is "BigExtraTop":
@@ -1513,10 +1513,10 @@ def get_ad(scenario, t_ad=None, size_clusters=100, nssms=None):
         for i in range(0,6):
             ad[:,size_clusters*i:size_clusters*i+15] = 0
             ad[size_clusters*i:size_clusters*i+15,
-            range(15,size_clusters)+
-            range(1*size_clusters+15,2*size_clusters)+
-            range(2*size_clusters+15,3*size_clusters)+range(3*size_clusters+15,4*size_clusters)+
-            range(4*size_clusters+15,5*size_clusters)+range(5*size_clusters+15,6*size_clusters)] = 1
+            list(range(15,size_clusters))+
+            list(range(1*size_clusters+15,2*size_clusters))+
+            list(range(2*size_clusters+15,3*size_clusters))+list(range(3*size_clusters+15,4*size_clusters))+
+            list(range(4*size_clusters+15,5*size_clusters))+list(range(5*size_clusters+15,6*size_clusters))] = 1
         return ad
     else:
         raise LookupError("Invalid scenario")
@@ -1587,7 +1587,7 @@ def scoringtotal_behavior(verbose=False):
     t_cluster_size = get_cluster_size("Truth")
     t_ncluster = len(t_cluster_size)
     t_cf = get_cf("Truth", t_cluster_size)
-    t_1C = zip(t_cluster_size, t_cf)
+    t_1C = list(zip(t_cluster_size, t_cf))
 
     t_ccm = get_ccm("Truth")
     t_ad = get_ad("Truth")
@@ -1604,7 +1604,7 @@ def scoringtotal_behavior(verbose=False):
         p_cluster_size = get_cluster_size(scenario)
         p_cf = get_cf(scenario, p_cluster_size)
         l_p_ncluster.append(len(p_cluster_size))
-        l_p_1C.append(zip(p_cluster_size, p_cf))
+        l_p_1C.append(list(zip(p_cluster_size, p_cf)))
 
         l_p_ccm.append(get_ccm(scenario))
         l_p_ad.append(get_ad(scenario))
@@ -1617,8 +1617,8 @@ def scoringtotal_behavior(verbose=False):
 
     f = open(tsv_dir + "all_scores.csv", 'wb')
     wr = csv.writer(f)
-    wr.writerow(scores.keys())
-    wr.writerow(scores.values())
+    wr.writerow(list(scores.keys()))
+    wr.writerow(list(scores.values()))
     f.close()
 
     return scores
@@ -1653,28 +1653,28 @@ if __name__ == '__main__':
               'orig']
     }
     for m in methods['1A']:
-        print 'Scoring 1A Behavior with method ' + m + '...'
+        print('Scoring 1A Behavior with method ' + m + '...')
      #   scoring1A_behavior(m)
 
     for m in methods['1B']:
-        print 'Scoring 1B Behavior with method ' + m + '...'
+        print('Scoring 1B Behavior with method ' + m + '...')
 #        scoring1B_behavior(m)
 
 
 
 
     for m in methods['1C']:
-        print 'Scoring 1C Behavior with method ' + m + '...'
+        print('Scoring 1C Behavior with method ' + m + '...')
 #        scoring1C_behavior(m)
     for m in methods['2']:
-        print 'Scoring 2A Behavior with method ' + m + '...'
+        print('Scoring 2A Behavior with method ' + m + '...')
      #   out=scoring2A_behavior_var(methods=m, verbose=True,n_ssm=600,n_clusters=6,big_extra_num=15,write=False,rep=1, nvar=False)
    #     print(out)
-        print 'Scoring 2B Behavior with method ' + m + '...'
+        print('Scoring 2B Behavior with method ' + m + '...')
 #        scoring2B_behavior(method=m, verbose=True, tst_betas=True, tst_prob_mod_err=True, tst_prob_mod=True)
 
  #   scoring2A_behavior(method='pearson', verbose=True, tst_closest_reassign=False, tst_big_mat=True, tst_rand_reassign=False)
-    print 'Scoring 3A Behavior...'
+    print('Scoring 3A Behavior...')
   #  write_ccm()
     #scoring3A_behavior_all(verbose=True,size_clusters=3)
  #   scoring3A_behavior(method="mcc", verbose=True,pc_amount="none", full_matrix=False, in_mat=1)
